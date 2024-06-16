@@ -1,0 +1,27 @@
+﻿@page "/users"
+@using Microsoft.AspNetCore.Components.QuickGrid
+@inject BlazorApp3.Model.TournamentContext DB
+@using BlazorApp3.Model
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="users/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="DB.Users">
+    <PropertyColumn Property="user => user.Username" />
+    <PropertyColumn Property="user => user.Password" />
+    <PropertyColumn Property="user => user.DisplayName" />
+    <PropertyColumn Property="user => user.IsActive" />
+    <PropertyColumn Property="user => user.LastLoggedIn" />
+    <PropertyColumn Property="user => user.SerialNumber" />
+
+    <TemplateColumn Context="user">
+        <a href="@($"users/edit?id={user.Id}")">Edit</a> |
+        <a href="@($"users/details?id={user.Id}")">Details</a> |
+        <a href="@($"users/delete?id={user.Id}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
