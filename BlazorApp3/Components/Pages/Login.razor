@@ -1,0 +1,134 @@
+﻿@page "/login"
+@using BlazerApp1.Models.DTOs
+@using BlazerApp1.Services
+@using System.Security.Claims
+@using BlazorApp3.Model
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using System.Globalization
+@using BlazerApp3.Services;
+@using Microsoft.AspNetCore.Authentication;
+@using System.Security.Cryptography
+@using System.Text
+@using Microsoft.AspNetCore.Http
+@inject NavigationManager NavigationManager
+@inject BlazorApp3.Model.TournamentContext DB
+@inject IHttpContextAccessor httpContextAccessor
+
+
+<h3>Login</h3>
+
+
+
+   <div class="col-md-4">
+
+    <EditForm method="post" Model="loginUser" OnValidSubmit="DoLogin" FormName="create" Enhance>
+            
+        <div class="form-group">
+            <input asp-for="loginUser.Username" type="text" class="form-control" placeholder="UserName">
+        </div>
+        <span asp-validation-for="loginUser.Username"></span>
+        <div class="form-group">
+            <input asp-for="loginUser.Password" type="password" class="form-control" placeholder="Password">
+
+        </div>
+        <span asp-validation-for="loginUser.Password"></span>
+        <div class="form-group">
+        <input type="submit" value="Login" class="btn btn-success"/>
+        </div>
+     </EditForm>
+
+    </div>
+
+@code {
+    private LoginDTO loginUser = new();
+
+
+
+
+
+    public async Task DoLogin()
+    {
+        var passwordHash = GetSha256Hash(loginUser.Password);
+        var user = DB.Users.FirstOrDefault(x => x.Username == loginUser.Username && x.Password == passwordHash);
+
+        if (user?.IsActive != true)
+        {
+
+            await httpContextAccessor.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            NavigationManager.NavigateTo("notauthorized");
+        }
+
+        var loginCookieExpirationDays = 30;
+        var cookieClaims = await createCookieClaimsAsync(user);
+        await httpContextAccessor.HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            cookieClaims,
+            new AuthenticationProperties
+                {
+                    IsPersistent = true, // "Remember Me"
+                    IssuedUtc = DateTimeOffset.UtcNow,
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddDays(loginCookieExpirationDays)
+                });
+
+        await UpdateUserLastActivityDateAsync(user.Id);
+
+        NavigationManager.NavigateTo("/");
+    }
+
+    private async Task<ClaimsPrincipal> createCookieClaimsAsync(User user)
+    {
+        var identity = new ClaimsIdentity(CookieAuthenticationDefaults.AuthenticationScheme);
+        identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString(CultureInfo.InvariantCulture)));
+        identity.AddClaim(new Claim(ClaimTypes.Name, user.Username));
+        identity.AddClaim(new Claim("DisplayName", user.DisplayName));
+
+        // to invalidate the cookie
+        identity.AddClaim(new Claim(ClaimTypes.SerialNumber, user.SerialNumber));
+
+        // custom data
+        identity.AddClaim(new Claim(ClaimTypes.UserData, user.Id.ToString(CultureInfo.InvariantCulture)));
+
+        // add roles
+        var roles = (from ur in DB.UserRoles
+                    .Where(x => x.UserId == user.Id)
+                     join ro in DB.Roles on ur.RoleId equals ro.Id
+                     select new { ro.Name })
+                    .ToList();
+
+                    
+        foreach (var role in roles)
+        {
+            identity.AddClaim(new Claim(ClaimTypes.Role, role.Name));
+        }
+
+        return new ClaimsPrincipal(identity);
+    }
+
+    private string GetSha256Hash(string input)
+    {
+        using (var hashAlgorithm = SHA256.Create())
+        {
+            var byteValue = Encoding.UTF8.GetBytes(input);
+            var byteHash = hashAlgorithm.ComputeHash(byteValue);
+            return Convert.ToBase64String(byteHash);
+        }
+    }
+
+    private async Task UpdateUserLastActivityDateAsync(int userId)
+    {
+        var user = await DB.Users.FindAsync(userId);
+        if (user.LastLoggedIn != null)
+        {
+            var updateLastActivityDate = TimeSpan.FromMinutes(2);
+            var currentUtc = DateTimeOffset.UtcNow;
+            var timeElapsed = currentUtc.Subtract(user.LastLoggedIn.Value);
+            if (timeElapsed < updateLastActivityDate)
+            {
+                return;
+            }
+        }
+        user.LastLoggedIn = DateTimeOffset.UtcNow;
+        await DB.SaveChangesAsync();
+    }
+
+}

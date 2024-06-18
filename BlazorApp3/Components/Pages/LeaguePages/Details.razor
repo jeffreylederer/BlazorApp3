@@ -1,0 +1,67 @@
+﻿@page "/leagues/details"
+@inject BlazorApp3.Model.TournamentContext DB
+@using BlazorApp3.Model
+@inject NavigationManager NavigationManager
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h4>League</h4>
+    <hr />
+    @if (league is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">LeagueName</dt>
+            <dd class="col-sm-10">@league.LeagueName</dd>
+            <dt class="col-sm-2">Active</dt>
+            <dd class="col-sm-10">@league.Active</dd>
+            <dt class="col-sm-2">TeamSize</dt>
+            <dd class="col-sm-10">@league.TeamSize</dd>
+            <dt class="col-sm-2">TiesAllowed</dt>
+            <dd class="col-sm-10">@league.TiesAllowed</dd>
+            <dt class="col-sm-2">PointsCount</dt>
+            <dd class="col-sm-10">@league.PointsCount</dd>
+            <dt class="col-sm-2">WinPoints</dt>
+            <dd class="col-sm-10">@league.WinPoints</dd>
+            <dt class="col-sm-2">TiePoints</dt>
+            <dd class="col-sm-10">@league.TiePoints</dd>
+            <dt class="col-sm-2">ByePoints</dt>
+            <dd class="col-sm-10">@league.ByePoints</dd>
+            <dt class="col-sm-2">StartWeek</dt>
+            <dd class="col-sm-10">@league.StartWeek</dd>
+            <dt class="col-sm-2">PointsLimit</dt>
+            <dd class="col-sm-10">@league.PointsLimit</dd>
+            <dt class="col-sm-2">Divisions</dt>
+            <dd class="col-sm-10">@league.Divisions</dd>
+            <dt class="col-sm-2">PlayOffs</dt>
+            <dd class="col-sm-10">@league.PlayOffs</dd>
+        </dl>
+        <div>
+            <a href="@($"/leagues/edit?id={league.Id}")">Edit</a> |
+            <a href="@($"/leagues")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    League? league;
+
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        league = await DB.Leagues.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (league is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

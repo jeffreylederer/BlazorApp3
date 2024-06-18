@@ -1,0 +1,59 @@
+﻿@page "/schedules/create"
+@inject BlazorApp3.Model.TournamentContext DB
+@using BlazorApp3.Model
+@inject NavigationManager NavigationManager
+
+
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+<h4>Schedule</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="@Schedule" OnValidSubmit="AddSchedule" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+            <div class="mb-3">
+                <label for="gamedate" class="form-label">GameDate:</label> 
+                <InputDate id="gamedate" @bind-Value="Schedule.GameDate" class="form-control" /> 
+                <ValidationMessage For="() => Schedule.GameDate" class="text-danger" /> 
+            </div>        
+                  
+            <div class="mb-3">
+                <label for="cancelled" class="form-label">Cancelled:</label> 
+                <InputCheckbox id="cancelled" @bind-Value="Schedule.Cancelled" class="form-check-input" /> 
+                <ValidationMessage For="() => Schedule.Cancelled" class="text-danger" /> 
+            </div>        
+                 
+            <div class="mb-3">
+                <label for="playoffs" class="form-label">PlayOffs:</label> 
+                <InputCheckbox id="playoffs" @bind-Value="Schedule.PlayOffs" class="form-check-input" /> 
+                <ValidationMessage For="() => Schedule.PlayOffs" class="text-danger" /> 
+            </div>        
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/schedules">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    public Schedule Schedule { get; set; } = new Schedule() { GameDate = DateOnly.FromDateTime(DateTime.Now) };
+
+    [SupplyParameterFromQuery]
+    public int leagueid { get; set; }
+
+    // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
+    public async Task AddSchedule()
+    {
+        Schedule.Leagueid = leagueid;
+        DB.Schedules.Add(Schedule);
+        await DB.SaveChangesAsync();
+        NavigationManager.NavigateTo("/schedules");
+    }
+}

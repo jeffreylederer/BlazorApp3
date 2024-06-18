@@ -1,0 +1,112 @@
+﻿@page "/Memberships/edit"
+@inject BlazorApp3.Model.TournamentContext DB
+@using BlazorApp3.Model
+@inject NavigationManager NavigationManager
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject ProtectedSessionStorage ProtectedSessionStore
+@rendermode InteractiveServer
+
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+<h4>Membership</h4>
+<hr />
+@if (Membership is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Membership" OnValidSubmit="UpdateMembership" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <input type="hidden" name="Membership.Id" value="@Membership.Id" />
+                <div class="mb-3">
+                    <label for="firstname" class="form-label">FirstName:</label>
+                    <InputText id="firstname" @bind-Value="Membership.FirstName" class="form-control" />
+                    <ValidationMessage For="() => Membership.FirstName" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="lastname" class="form-label">LastName:</label>
+                    <InputText id="lastname" @bind-Value="Membership.LastName" class="form-control" />
+                    <ValidationMessage For="() => Membership.LastName" class="text-danger" />
+                </div>
+               
+                <div class="mb-3">
+                    <label for="shortname" class="form-label">Shortname:</label>
+                    <InputText id="shortname" @bind-Value="Membership.Shortname" class="form-control" />
+                    <ValidationMessage For="() => Membership.Shortname" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="wheelchair" class="form-label">Wheelchair:</label>
+                    <InputCheckbox id="wheelchair" @bind-Value="Membership.Wheelchair" class="form-check-input" />
+                    <ValidationMessage For="() => Membership.Wheelchair" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/memberships">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    public Membership? Membership { get; set; }
+
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+
+            Membership ??= await DB.Memberships.FirstOrDefaultAsync(m => m.Id == Id);
+            await ProtectedSessionStore.SetAsync("row", Convert.ToBase64String(Membership.Rowversion));
+            StateHasChanged();
+            
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more details, see https://aka.ms/RazorPagesCRUD.
+    public async Task UpdateMembership()
+    {
+        await Task.Delay(1000);
+        var result = await ProtectedSessionStore.GetAsync<string>("row");
+        if (result.Success && result.Value != null)
+            Membership.Rowversion = Convert.FromBase64String(result.Value);
+        DB.Attach(Membership!).State = EntityState.Modified;
+
+        try
+        {
+            await DB.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!MembershipExists(Membership!.Id))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/memberships");
+    }
+
+    bool MembershipExists(int id)
+    {
+        return DB.Memberships.Any(e => e.Id == id);
+    }
+}

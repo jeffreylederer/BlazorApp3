@@ -1,0 +1,200 @@
+﻿@page "/Teams/edit"
+@inject BlazorApp3.Model.TournamentContext DB
+@using BlazorApp3.Code
+@using BlazorApp3.Model
+@inject NavigationManager NavigationManager
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using System.Text
+@inject ProtectedSessionStorage ProtectedSessionStore
+@rendermode InteractiveServer
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+<span style="color:red;font-weight:bold; font-size:large;">@message</span>
+<h4>Team</h4>
+<hr />
+@if (Team is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Team" OnValidSubmit="UpdateTeam" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <input type="hidden" id="leagueid" @bind="Team.Leagueid" />
+                <input type="hidden" id="teamno" @bind="Team.TeamNo" />
+                <div class="mb-3">
+                    <label for="skip" class="form-label">Skip:</label>
+                    <select id="skip" @bind="Team.Skip" class="form-control" style="width:300px;">
+                        <option value="0"></option>
+                        @foreach (var item in dropdownList)
+                        {
+                            <option value="@item.id" >@item.FullName</option>
+                        }
+                    </select>
+                    <ValidationMessage For="() => Team.Skip" class="text-danger" />
+                </div>
+                @if (@league.TeamSize == 3)
+                {
+                    <div class="mb-3">
+                        <label for="viceskip" class="form-label">ViceSkip:</label>
+                        <InputSelect id="viceskip" @bind-Value="Team.ViceSkip" class="form-control" style="width:300px;">
+                            <option value="0"></option>
+                            @foreach (var item in dropdownList)
+                            {
+                                <option value="@item.id" >@item.FullName</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="() => Team.ViceSkip" class="text-danger" />
+                    </div>
+                }
+                else
+                {
+                    <input type="hidden" id="viceskip" @bind="Team.ViceSkip" />
+                }
+                @if (@league.TeamSize > 1)
+                {
+                    <div class="mb-3">
+                        <label for="lead" class="form-label">Lead:</label>
+                        <InputSelect id="lead" @bind-Value="Team.Lead" class="form-control" style="width:300px;">
+                            <option value="0"></option>
+                            @foreach (var item in dropdownList)
+                            {
+                                <option value="@item.id" >@item.FullName</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="() => Team.Lead" class="text-danger" />
+                    </div>
+                }
+                else
+                {
+                    <input type="hidden" id="lead" @bind="Team.Lead" />
+                }
+
+
+                @if (@league.Divisions == 2)
+                {
+                    <div class="mb-3">
+                        <label for="divisionid" class="form-label">DivisionId:</label>
+                        <select id="divisionid" @bind="Team.DivisionId" class="form-control" style="width:50px;">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                        </select>
+
+                        <ValidationMessage For="() => Team.DivisionId" class="text-danger" />
+                    </div>
+                }
+                else
+                {
+                    <input type="hidden" id="divisionid" @bind="Team.DivisionId" />
+                }
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/teams">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    public Team? Team { get; set; }
+    int? leagueid { get; set; }
+    League? league { get; set; }
+    public List<PlayerViewModel> dropdownList { get; set; }
+    public string message = "";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+
+            Team ??= await DB.Teams.FirstOrDefaultAsync(m => m.Id == Id);
+            await ProtectedSessionStore.SetAsync("row", Convert.ToBase64String(Team.Rowversion));
+
+            if (Team is null)
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            leagueid = Team.Leagueid;
+            league = await DB.Leagues.FindAsync(leagueid);
+            var teams = DB.Teams.Where(x => x.Leagueid == Team.Leagueid).OrderBy(x => x.TeamNo).ToList();
+            dropdownList =BlazorApp3.Code.RemainingPlayers.Find(Team, teams);
+            StateHasChanged();
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more details, see https://aka.ms/RazorPagesCRUD.
+    public async Task UpdateTeam()
+    {
+        await Task.Delay(1000);
+        ProtectedBrowserStorageResult<string> result = await ProtectedSessionStore.GetAsync<string>("row");
+        if (result.Success)
+            Team.Rowversion = Encoding.ASCII.GetBytes(result.Value);
+        Team.Skip = Team.Skip == 0 ? (int?)null : Team.Skip;
+        Team.ViceSkip = Team.ViceSkip == 0 ? (int?)null : Team.ViceSkip;
+        Team.Lead = Team.Lead == 0 ? (int?)null : Team.Lead;
+        if (CheckTeamApp.CheckTeam(Team))
+        {
+            message = "Unable to create record, a player cannot be on a team in multiple positions";
+            return;
+        }
+        DB.Attach(Team!).State = EntityState.Modified;
+
+
+        try
+        {
+            await DB.SaveChangesAsync();
+            OrderTeam(leagueid.Value);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!TeamExists(Team!.Id))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/teams");
+    }
+
+    bool TeamExists(int id)
+    {
+        return DB.Teams.Any(e => e.Id == id);
+    }
+
+    private void OrderTeam(int leagueid)
+    {
+        bool changed = false;
+        var teams = DB.Teams.Where(x => x.Leagueid == leagueid).OrderBy(x => x.DivisionId).ToList();
+        for (int i = 0; i < teams.Count(); i++)
+        {
+            var item = teams[i];
+            if (item.TeamNo != i + 1)
+            {
+                item.TeamNo = i + 1;
+                DB.Entry(item).State = EntityState.Modified;
+                changed = true;
+            }
+        }
+        if (changed)
+            DB.SaveChanges();
+    }
+
+   
+}

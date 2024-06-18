@@ -1,0 +1,27 @@
+﻿@page "/memberships"
+@using Microsoft.AspNetCore.Components.QuickGrid
+@inject BlazorApp3.Model.TournamentContext DB
+@using BlazorApp3.Model
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="memberships/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="DB.Memberships.OrderBy(x=>x.LastName)">
+    <PropertyColumn Property="membership => membership.FirstName" />
+    <PropertyColumn Property="membership => membership.LastName" />
+    <PropertyColumn Property="membership => membership.FullName" />
+    <PropertyColumn Property="membership => membership.Shortname" />
+    <PropertyColumn Property="membership => membership.NickName" />
+    <PropertyColumn Property="membership => membership.Wheelchair" />
+
+    <TemplateColumn Context="membership">
+        <a href="@($"memberships/edit?id={membership.Id}")">Edit</a> |
+        <a href="@($"memberships/details?id={membership.Id}")">Details</a> |
+        <a href="@($"memberships/delete?id={membership.Id}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>

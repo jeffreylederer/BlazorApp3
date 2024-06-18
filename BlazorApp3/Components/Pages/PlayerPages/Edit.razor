@@ -1,0 +1,126 @@
+﻿@page "/Players/edit"
+@inject BlazorApp3.Model.TournamentContext DB
+@using BlazorApp3.Model
+@inject NavigationManager NavigationManager
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using System.Text
+@inject ProtectedSessionStorage ProtectedSessionStore
+@rendermode InteractiveServer
+
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h4>Player</h4>
+<hr />
+@{
+    if (Player is null )
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-4">
+                <EditForm method="post" Model="@Player" OnValidSubmit="UpdatePlayer" FormName="edit" Enhance>
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="text-danger" />
+                    <input type="hidden" Id="LeagueId" @bind="@Player.Leagueid" />
+                    <select id="MembershipId" @bind="@Player.MembershipId">
+                        @{
+                            foreach (var item in members1)
+                            {
+                                <option value="@item.Id">@item.FullName</option>
+                            }
+                        }
+                    </select>
+
+
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </EditForm>
+            </div>
+        </div>
+    }
+}
+
+<div>
+    <a href="/players">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    public Player? Player { get; set; }
+    public List<Membership>? members1;
+    public int? leagueid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Player ??= await DB.Players.FirstOrDefaultAsync(m => m.Id == Id);
+        var members = DB.Memberships.ToList();
+        members1 = new List<Membership>();
+        var players = DB.Players.Where(x => x.Leagueid == leagueid).ToList();
+        foreach (var item in members)
+        {
+            if (!players.Exists(x => x.MembershipId == item.Id || x.Id == Id))
+            {
+                members1.Add(item);
+            }
+        }
+
+        if (Player is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+        StateHasChanged();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (Player != null)
+        {
+            await ProtectedSessionStore.SetAsync("row", Convert.ToBase64String(Player.Rowversion));
+        }
+        else
+        {
+            StateHasChanged();
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more details, see https://aka.ms/RazorPagesCRUD.
+    public async Task UpdatePlayer()
+    {
+        await Task.Delay(1000);
+        var result = await ProtectedSessionStore.GetAsync<string>("row");
+        if (result.Success)
+            Player.Rowversion = Encoding.ASCII.GetBytes(result.Value);
+        DB.Attach(Player!).State = EntityState.Modified;
+        try
+        {
+            await DB.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!PlayerExists(Player!.Id))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/players");
+    }
+
+    bool PlayerExists(int id)
+    {
+        return DB.Players.Any(e => e.Id == id);
+    }
+}

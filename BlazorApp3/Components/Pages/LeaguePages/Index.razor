@@ -1,0 +1,37 @@
+﻿@page "/leagues"
+@using Microsoft.AspNetCore.Components.QuickGrid
+@inject BlazorApp3.Model.TournamentContext DB
+@using BlazorApp3.Model
+@rendermode InteractiveServer
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="leagues/create">Create New League</a>
+</p>
+
+
+<QuickGrid Class="table table-striped table-condensed" Items="DB.Leagues">
+            <PropertyColumn Property="league => league.LeagueName" Title="League Name"/>
+            <PropertyColumn Property="league => league.Active" />
+            <PropertyColumn Property="league => league.TeamSize" Title="Size of Team" />
+            <PropertyColumn Property="league => league.TiesAllowed" Title="Are Ties Allowed" />
+            <PropertyColumn Property="league => league.PointsCount" Title="Do Points Count In Standings" />
+            <PropertyColumn Property="league => league.WinPoints" Title="Points for a Win" />
+            <PropertyColumn Property="league => league.TiePoints" Title="Points for a Tie" />
+            <PropertyColumn Property="league => league.ByePoints" Title="Points for Bye" />
+            <PropertyColumn Property="league => league.StartWeek" Title="Start Week" />
+            <PropertyColumn Property="league => league.PointsLimit" Title="Limit for Points" />
+            <PropertyColumn Property="league => league.Divisions" />
+            <PropertyColumn Property="league => league.PlayOffs" />
+
+            <TemplateColumn Context="league">
+                <a href="@($"leagues/edit?id={league.Id}")">Edit</a> |
+                <a href="@($"leagues/details?id={league.Id}")">Details</a> |
+                <a href="@($"leagues/delete?id={league.Id}")">Delete</a>
+            </TemplateColumn>
+        </QuickGrid>
+
+

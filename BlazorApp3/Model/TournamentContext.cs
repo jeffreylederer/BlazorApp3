@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using BlazerApp1.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlazorApp3.Model;
 
-public partial class TournamentContext : DbContext
+public partial class TournamentContext : DbContext, IUnitOfWork
 {
     public TournamentContext()
     {

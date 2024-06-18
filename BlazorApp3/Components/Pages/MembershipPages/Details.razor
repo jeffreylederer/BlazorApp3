@@ -1,0 +1,57 @@
+﻿@page "/memberships/details"
+@inject BlazorApp3.Model.TournamentContext DB
+@using BlazorApp3.Model
+@inject NavigationManager NavigationManager
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h4>Membership</h4>
+    <hr />
+    @if (membership is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">FirstName</dt>
+            <dd class="col-sm-10">@membership.FirstName</dd>
+            <dt class="col-sm-2">LastName</dt>
+            <dd class="col-sm-10">@membership.LastName</dd>
+            <dt class="col-sm-2">FullName</dt>
+            <dd class="col-sm-10">@membership.FullName</dd>
+            <dt class="col-sm-2">Shortname</dt>
+            <dd class="col-sm-10">@membership.Shortname</dd>
+            <dt class="col-sm-2">NickName</dt>
+            <dd class="col-sm-10">@membership.NickName</dd>
+            <dt class="col-sm-2">Rowversion</dt>
+            <dd class="col-sm-10">@membership.Rowversion</dd>
+            <dt class="col-sm-2">Wheelchair</dt>
+            <dd class="col-sm-10">@membership.Wheelchair</dd>
+        </dl>
+        <div>
+            <a href="@($"/memberships/edit?id={membership.Id}")">Edit</a> |
+            <a href="@($"/memberships")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    Membership? membership;
+
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        membership = await DB.Memberships.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (membership is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

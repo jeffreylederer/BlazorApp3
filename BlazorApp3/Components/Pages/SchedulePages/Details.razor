@@ -1,0 +1,55 @@
+﻿@page "/schedules/details"
+@inject BlazorApp3.Model.TournamentContext DB
+@using BlazorApp3.Model
+@inject NavigationManager NavigationManager
+@using Microsoft.EntityFrameworkCore
+
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    
+
+    @if (schedule is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <h4>Schedule for @league.LeagueName</h4>
+        <dl class="row">
+            <dt class="col-sm-2">Game Date</dt>
+            <dd class="col-sm-10">@schedule.GameDate</dd>
+            <dt class="col-sm-2">Cancelled</dt>
+            <dd class="col-sm-10">@schedule.Cancelled</dd>
+            <dt class="col-sm-2">Week Date</dt>
+            <dd class="col-sm-10">@schedule.GameDate.ToString("dddd")</dd>
+            <dt class="col-sm-2">PlayOffs</dt>
+            <dd class="col-sm-10">@schedule.PlayOffs</dd>
+        </dl>
+        <div>
+            <a href="@($"/schedules/edit?id={schedule.Id}")">Edit</a> |
+            <a href="@($"/schedules")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    Schedule? schedule;
+    League? league;
+
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        schedule = await DB.Schedules.FirstOrDefaultAsync(m => m.Id == Id);
+        league = await DB.Leagues.FirstOrDefaultAsync(m => m.Id ==schedule.Leagueid);
+
+        if (schedule is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

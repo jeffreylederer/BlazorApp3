@@ -1,0 +1,113 @@
+﻿@page "/Schedules/edit"
+@inject BlazorApp3.Model.TournamentContext DB
+@using BlazorApp3.Model
+@inject NavigationManager NavigationManager
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.EntityFrameworkCore
+@using System.Text
+@inject ProtectedSessionStorage ProtectedSessionStore
+@rendermode InteractiveServer
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h4>Schedule</h4>
+<hr />
+@if (Schedule is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Schedule" OnValidSubmit="UpdateSchedule" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <input type="hidden" name="Schedule.Id" value="@Schedule.Id" />
+                <input type="hidden" name="Schedule.LeagueId" value="@Schedule.Leagueid"/>
+                <div class="mb-3">
+                    <label for="gamedate" class="form-label">GameDate:</label>
+                    <InputDate id="gamedate" @bind-Value="Schedule.GameDate" class="form-control" style="width:200px;" />
+                    <ValidationMessage For="() => Schedule.GameDate" class="text-danger" />
+                </div>
+               
+                <div class="mb-3">
+                    <label for="cancelled" class="form-label">Cancelled:</label>
+                    <InputCheckbox id="cancelled" @bind-Value="Schedule.Cancelled" class="form-check-input" />
+                    <ValidationMessage For="() => Schedule.Cancelled" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="playoffs" class="form-label">PlayOffs:</label>
+                    <InputCheckbox id="playoffs" @bind-Value="Schedule.PlayOffs" class="form-check-input" />
+                    <ValidationMessage For="() => Schedule.PlayOffs" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/schedules">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    public Schedule? Schedule { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Schedule ??= await DB.Schedules.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (Schedule is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (Schedule != null)
+        {
+            await ProtectedSessionStore.SetAsync("row", Convert.ToBase64String(Schedule.Rowversion));
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more details, see https://aka.ms/RazorPagesCRUD.
+    public async Task UpdateSchedule()
+    {
+         var result = await ProtectedSessionStore.GetAsync<string>("row");
+        if (result.Success)
+            Schedule.Rowversion = Encoding.ASCII.GetBytes(result.Value);
+        DB.Attach(Schedule!).State = EntityState.Modified;
+
+        try
+        {
+            await DB.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!ScheduleExists(Schedule!.Id))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/schedules");
+    }
+
+    bool ScheduleExists(int id)
+    {
+        return DB.Schedules.Any(e => e.Id == id);
+    }
+}

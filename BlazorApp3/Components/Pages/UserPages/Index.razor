@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.Components.QuickGrid
 @inject BlazorApp3.Model.TournamentContext DB
 @using BlazorApp3.Model
+@using System.ComponentModel.DataAnnotations
 
 <PageTitle>Index</PageTitle>
 
@@ -11,17 +12,46 @@
     <a href="users/create">Create New</a>
 </p>
 
-<QuickGrid Class="table" Items="DB.Users">
+<QuickGrid  Items="@displayUsers">
     <PropertyColumn Property="user => user.Username" />
-    <PropertyColumn Property="user => user.Password" />
     <PropertyColumn Property="user => user.DisplayName" />
     <PropertyColumn Property="user => user.IsActive" />
-    <PropertyColumn Property="user => user.LastLoggedIn" />
-    <PropertyColumn Property="user => user.SerialNumber" />
-
+    <PropertyColumn Property="user => user.Role" />
     <TemplateColumn Context="user">
         <a href="@($"users/edit?id={user.Id}")">Edit</a> |
         <a href="@($"users/details?id={user.Id}")">Details</a> |
         <a href="@($"users/delete?id={user.Id}")">Delete</a>
     </TemplateColumn>
 </QuickGrid>
+
+@code {
+    IQueryable<UserDTOIndex> displayUsers;
+
+    protected override async Task OnInitializedAsync()
+    {
+        displayUsers = from us in DB.Users
+                   join ur in DB.UserRoles on us.Id equals ur.UserId
+                   join ro in DB.Roles on ur.RoleId equals ro.Id
+                   select new UserDTOIndex { Id = us.Id, DisplayName = us.DisplayName, Username = us.Username, IsActive = us.IsActive, Role = ro.Name };
+       
+
+    }
+
+
+    public class UserDTOIndex
+    {
+        public int Id { get; set; }
+        [Display(Name = "Username")]
+        [Required(ErrorMessage = "Please enter {0}")]
+        public string? Username { get; set; }
+
+        [Display(Name = "Is Active")]
+        public bool IsActive { get; set; }
+
+        [Display(Name = "Display Name")]
+        public string? DisplayName { get; set; }
+
+        [Display(Name = "Role")]
+        public string? Role { get; set; }
+    }
+}

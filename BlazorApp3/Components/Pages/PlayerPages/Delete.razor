@@ -1,0 +1,104 @@
+﻿@page "/players/delete"
+@inject BlazorApp3.Model.TournamentContext DB
+@using BlazorApp3.Model
+@inject NavigationManager NavigationManager
+@using Microsoft.Data.SqlClient
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using System.Data.Entity.Validation
+@using System.Text
+@inject ProtectedSessionStorage ProtectedSessionStore
+@rendermode InteractiveServer
+
+<PageTitle>Delete</PageTitle>
+
+<span style="color:red;font-weight:bold; font-size:large;">@message</span>
+
+<h1>Delete</h1>
+
+<h3>Are you sure you want to delete this?</h3>
+<div>
+    <h4>Player</h4>
+    <hr />
+    @if (player is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-1">Player</dt>
+            <dd class="col-sm-10">@name</dd>
+        </dl>
+        
+       
+        <EditForm method="post" Model="player" OnValidSubmit="DeletePlayer" FormName="delete" Enhance>
+            <button type="submit" class="btn btn-danger" disabled="@(player is null)">Delete</button> |
+            <a href="/players">Back to List</a>
+        </EditForm>
+    }
+</div>
+
+@code {
+    Player? player;
+    string message = "";
+    string name;
+
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        player = await DB.Players.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (player is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+        var member = await DB.Memberships.FirstOrDefaultAsync(m => m.Id == player.MembershipId);
+        name = member.FullName;
+
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (player != null)
+        {
+            await ProtectedSessionStore.SetAsync("row", Convert.ToBase64String(player.Rowversion));
+        }
+    }
+
+    public async Task DeletePlayer()
+    {
+        try
+        {
+            await Task.Delay(1000);
+            ProtectedBrowserStorageResult<string> result = await ProtectedSessionStore.GetAsync<string>("row");
+            if (result.Success)
+            {
+                player.Rowversion = Encoding.ASCII.GetBytes(result.Value);
+                DB.Players.Remove(player!);
+                await DB.SaveChangesAsync();
+            }
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            message = "Player cannot be deleted because the record has been altered or deleted since this page was loaded";
+            return;
+        }
+        catch (DbUpdateException )
+        {
+            message = "Player cannot be deleted because this player is assigned to a team";
+            return;
+        }
+        catch (DbEntityValidationException ex1)
+        {
+            message = ex1.Message;
+        }
+        catch(Exception ex)
+        {
+            message = ex.Message;
+            return;
+        }
+        NavigationManager.NavigateTo("/players");
+    }
+}

@@ -1,0 +1,84 @@
+﻿@page "/teams"
+@using Microsoft.AspNetCore.Components.QuickGrid
+@inject BlazorApp3.Model.TournamentContext DB
+@using BlazorApp3.Model
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject ProtectedSessionStorage ProtectedSessionStore
+@rendermode InteractiveServer
+
+
+<PageTitle>Index</PageTitle>
+
+@{
+    if (league != null && leagueid.HasValue)
+    {
+
+        <h1>Index</h1>
+
+        <p>
+            <a href="teams/create?leagueid=@leagueid">Create New Team</a><br/>
+            <a href="teams/teamsreport?leagueid=@leagueid" target="_blank">Teams Report</a><br />
+        </p>
+
+        <QuickGrid Class="table" Items="DB.TeamsViews.Where(x=>x.Leagueid==leagueid).OrderBy(x=>x.TeamNo).OrderBy(x=>x.DivisionId)">
+            <PropertyColumn Property="team => team.Skip" />
+            @{
+                if(@viceskip)
+                {
+                    <PropertyColumn Property="team => team.ViceSkip" />
+                }
+              }
+            @{
+                if (@lead)
+                {
+                    <PropertyColumn Property="team => team.Lead"  />
+                }
+             }
+            <PropertyColumn Property="team => team.TeamNo" />
+            <PropertyColumn Property="team => team.DivisionId" />
+
+            <TemplateColumn Context="team">
+                <a href="@($"teams/edit?id={team.Id}")">Edit</a> |
+                <a href="@($"teams/details?id={team.Id}")">Details</a> |
+                <a href="@($"teams/delete?id={team.Id}")">Delete</a>
+            </TemplateColumn>
+        </QuickGrid>
+    }
+    else
+    {
+        <p>Loading...</p>
+    }
+}
+
+@code
+{
+    int? leagueid;
+    League? league;
+    bool lead = false;
+    bool viceskip=false;
+
+
+
+    protected override async Task OnAfterRenderAsync(bool firstTime)
+    {
+        if (firstTime)
+        {
+            ProtectedBrowserStorageResult<int> result = await ProtectedSessionStore.GetAsync<int>("leagueid");
+            if(result.Success)
+            {
+                leagueid = result.Value;
+                league = DB.Leagues.Find(leagueid.Value);
+                if (league != null)
+                {
+                    if (league?.TeamSize == 3)
+                        viceskip = true;
+                    if (league?.TeamSize > 1)
+                        lead = true;
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+    
+}

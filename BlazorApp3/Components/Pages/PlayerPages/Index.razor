@@ -1,0 +1,107 @@
+﻿@page "/players"
+@using Microsoft.AspNetCore.Components.QuickGrid
+@inject BlazorApp3.Model.TournamentContext DB
+@using BlazorApp3.Model
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject ProtectedSessionStorage ProtectedSessionStore
+@rendermode InteractiveServer
+
+
+
+<PageTitle>Index</PageTitle>
+
+
+
+@{
+        if(leagueid.HasValue && league != null)
+        {
+            <h1>@league.LeagueName</h1>
+            <p>
+                <a href="players/create?leagueid=@leagueid">Create New</a>
+            </p>
+            if(count > 0)
+            {
+                <p>
+                    Number of Players in League: @count
+                </p>
+            <table class="table">
+                        @foreach (var item in Model)
+                        {
+                        <tr>
+                            <td width="200px">
+                                   @item.FullName
+                            </td>
+
+                            <td>
+                            <a href="@($"players/edit?id={item.id}")">Edit</a> |  <a href="@($"players/delete?id={item.id}")">Delete</a>
+                            </td>
+                        </tr>
+                        }
+            </table>
+        }
+    }
+    else
+    {
+        <p>Loading...</p>
+    }
+}
+
+@code {
+
+    private int? leagueid;
+    private int count;
+    private League? league;
+
+    private List<Dataitem> Model;
+
+    protected override async Task OnAfterRenderAsync(bool firstTime)
+    {
+        if (firstTime)
+        {
+
+            ProtectedBrowserStorageResult<int> result = await ProtectedSessionStore.GetAsync<int>("leagueid");
+            if (result.Success)
+            {
+                leagueid = result.Value;
+                if (leagueid.HasValue)
+                {
+                    league = DB.Leagues.Find(leagueid);
+                    if (league != null)
+                    {
+                        var data = DB.Players
+                             .Where(x => x.Leagueid == leagueid.Value)
+                             .Join(DB.Memberships,
+                                 a => a.MembershipId,
+                                 b => b.Id,
+                                 (a, b) => new { id = a.Id, name = b.FullName, LastName = b.LastName})
+                                 .ToList();
+                        Model = new List<Dataitem>();
+                        foreach (var item in data)
+                            Model.Add(new Dataitem()
+                                {
+                                    id = item.id,
+                                    FullName = item.name
+                                });
+                        Model.Sort((a, b) => a.FullName.CompareTo(b.FullName));
+                        count = Model.Count();
+                    }
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
+    
+
+
+    
+
+    public class Dataitem
+    {
+        public int id;
+        public string FullName;
+    }
+
+    
+}
+

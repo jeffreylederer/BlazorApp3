@@ -1,0 +1,60 @@
+﻿@page "/memberships/create"
+@inject BlazorApp3.Model.TournamentContext DB
+@using BlazorApp3.Model
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+<h4>Membership</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Membership" OnValidSubmit="AddMembership" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+            <div class="mb-3">
+                <label for="firstname" class="form-label">FirstName:</label> 
+                <InputText id="firstname" @bind-Value="Membership.FirstName" class="form-control" /> 
+                <ValidationMessage For="() => Membership.FirstName" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="lastname" class="form-label">LastName:</label> 
+                <InputText id="lastname" @bind-Value="Membership.LastName" class="form-control" /> 
+                <ValidationMessage For="() => Membership.LastName" class="text-danger" /> 
+            </div>           
+            <div class="mb-3">
+                <label for="shortname" class="form-label">Shortname:</label> 
+                <InputText id="shortname" @bind-Value="Membership.Shortname" class="form-control" /> 
+                <ValidationMessage For="() => Membership.Shortname" class="text-danger" /> 
+            </div>        
+ 
+   
+            <div class="mb-3">
+                <label for="wheelchair" class="form-label">Wheelchair:</label> 
+                <InputCheckbox id="wheelchair" @bind-Value="Membership.Wheelchair" class="form-check-input" /> 
+                <ValidationMessage For="() => Membership.Wheelchair" class="text-danger" /> 
+            </div>        
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/memberships">Back to List</a>
+</div>
+
+@code {
+
+    [SupplyParameterFromForm]
+    public Membership Membership { get; set; } = new();
+
+    // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
+    public async Task AddMembership()
+    {
+        DB.Memberships.Add(Membership);
+        await DB.SaveChangesAsync();
+        NavigationManager.NavigateTo("/memberships");
+    }
+}

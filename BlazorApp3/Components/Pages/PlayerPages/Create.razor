@@ -1,0 +1,71 @@
+﻿@page "/players/create"
+@inject BlazorApp3.Model.TournamentContext DB
+@using BlazorApp3.Model
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+<h4>Player</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="@Player" OnValidSubmit="AddPlayer" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+            <input type="hidden" Id="LeagueId" @bind="@Player.Leagueid"/>
+             <select id="MembershipId" @bind="@Player.MembershipId" >
+                @{
+                    foreach (var item in members1) {
+                        <option value="@item.Id">@item.FullName</option>
+                    }
+                }
+              </select>
+   
+                
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/players">Back to List</a>
+</div>
+
+@code {
+
+        [SupplyParameterFromForm]
+        public Player Player { get; set; } = new();
+
+        [SupplyParameterFromQuery]
+        public int leagueid { get; set; }
+
+        public List<Membership>? members1;
+
+        // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
+        public async Task AddPlayer()
+        {
+            Player.Leagueid = leagueid;
+            DB.Players.Add(Player);
+            await DB.SaveChangesAsync();
+            NavigationManager.NavigateTo("/players");
+        }
+
+        protected override  void  OnInitialized()
+        {
+            var player = DB.Players.Where(x => x.Leagueid == leagueid).ToList();
+            var members = DB.Memberships.ToList();
+            members1 = new List<Membership>();
+            foreach(var item in members)
+            {
+                if(!player.Exists(x=>x.MembershipId == item.Id))
+                {
+                    members1.Add(item);
+                }
+            }
+       }
+
+
+ }

@@ -1,0 +1,124 @@
+﻿@page "/leagues/create"
+@inject BlazorApp3.Model.TournamentContext DB
+@using BlazorApp3.Model
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+
+        <h4>League</h4>
+        <hr />
+        <div class="row">
+            <div class="col-md-4">
+                <EditForm method="post" Model="@League" OnValidSubmit="AddLeague" FormName="create" Enhance>
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    <div class="mb-3">
+                        <label for="leaguename" class="form-label">LeagueName:</label>
+                        <InputText id="leaguename" @bind-Value="League.LeagueName" class="form-control" style="width:300px;" />
+                        <ValidationMessage For="() => League.LeagueName" class="text-danger" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="active" class="form-label">Active:</label>
+                        <InputCheckbox id="active" @bind-Value="League.Active" class="form-check-input" />
+                        <ValidationMessage For="() => League.Active" class="text-danger" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="teamsize" class="form-label">Team Size:</label>
+                        <select id="teamsize" @bind="@League.TeamSize" class="form-control">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                        </select>
+                        <ValidationMessage For="() => League.TeamSize" class="text-danger" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="tiesallowed" class="form-label">TiesAllowed:</label>
+                        <InputCheckbox id="tiesallowed" @bind-Value="League.TiesAllowed" class="form-check-input" />
+                        <ValidationMessage For="() => League.TiesAllowed" class="text-danger" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="pointscount" class="form-label">PointsCount:</label>
+                        <InputCheckbox id="pointscount" @bind-Value="League.PointsCount" class="form-check-input" />
+                        <ValidationMessage For="() => League.PointsCount" class="text-danger" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="winpoints" class="form-label">WinPoints:</label>
+                        <InputNumber id="winpoints" @bind-Value="League.WinPoints" class="form-control" />
+                        <ValidationMessage For="() => League.WinPoints" class="text-danger" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="tiepoints" class="form-label">TiePoints:</label>
+                        <InputNumber id="tiepoints" @bind-Value="League.TiePoints" class="form-control" />
+                        <ValidationMessage For="() => League.TiePoints" class="text-danger" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="byepoints" class="form-label">ByePoints:</label>
+                        <InputNumber id="byepoints" @bind-Value="League.ByePoints" class="form-control" />
+                        <ValidationMessage For="() => League.ByePoints" class="text-danger" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="startweek" class="form-label">StartWeek:</label>
+                        <InputNumber id="startweek" @bind-Value="League.StartWeek" class="form-control" />
+                        <ValidationMessage For="() => League.StartWeek" class="text-danger" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="pointslimit" class="form-label">PointsLimit:</label>
+                        <InputCheckbox id="pointslimit" @bind-Value="League.PointsLimit" class="form-check-input" />
+                        <ValidationMessage For="() => League.PointsLimit" class="text-danger" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="divisions" class="form-label">Divisions:</label>
+                        <select id="divisions" @bind="@League.Divisions" class="form-control">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                        </select>
+                        <ValidationMessage For="() => League.Divisions" class="text-danger" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="playoffs" class="form-label">PlayOffs:</label>
+                        <InputCheckbox id="playoffs" @bind-Value="League.PlayOffs" class="form-check-input" />
+                        <ValidationMessage For="() => League.PlayOffs" class="text-danger" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </EditForm>
+            </div>
+        </div>
+ 
+
+<div>
+    <a href="/leagues">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromForm(FormName = "create")]
+    public League League { get; set; } = new League()
+        {
+            Id = 0,
+            TeamSize = 2,
+            Active = true,
+            TiesAllowed = true,
+            PointsCount = true,
+            WinPoints = 1,
+            TiePoints = 1,
+            ByePoints = 1,
+            StartWeek = 1,
+            PointsLimit = true,
+            Divisions = 1,
+            PlayOffs = false
+        };
+
+    // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
+    public async Task AddLeague()
+    {
+        DB.Leagues.Add(League);
+        await DB.SaveChangesAsync();
+        NavigationManager.NavigateTo("/leagues");
+    }
+
+    
+  
+}

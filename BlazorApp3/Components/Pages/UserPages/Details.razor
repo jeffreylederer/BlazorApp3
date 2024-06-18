@@ -19,16 +19,13 @@
         <dl class="row">
             <dt class="col-sm-2">Username</dt>
             <dd class="col-sm-10">@user.Username</dd>
-            <dt class="col-sm-2">Password</dt>
-            <dd class="col-sm-10">@user.Password</dd>
             <dt class="col-sm-2">DisplayName</dt>
             <dd class="col-sm-10">@user.DisplayName</dd>
             <dt class="col-sm-2">IsActive</dt>
             <dd class="col-sm-10">@user.IsActive</dd>
-            <dt class="col-sm-2">LastLoggedIn</dt>
-            <dd class="col-sm-10">@user.LastLoggedIn</dd>
-            <dt class="col-sm-2">SerialNumber</dt>
-            <dd class="col-sm-10">@user.SerialNumber</dd>
+            <dt class="col-sm-2">Role</dt>
+            <dd class="col-sm-10">@role.Name</dd>
+            
         </dl>
         <div>
             <a href="@($"/users/edit?id={user.Id}")">Edit</a> |
@@ -39,6 +36,7 @@
 
 @code {
     User? user;
+    Role? role;
 
     [SupplyParameterFromQuery]
     public int Id { get; set; }
@@ -51,5 +49,9 @@
         {
             NavigationManager.NavigateTo("notfound");
         }
+        role = (from ur in DB.UserRoles.Where(x => x.UserId == user.Id)
+                   join ro in DB.Roles on ur.RoleId equals ro.Id
+                   select new Role { Id=ro.Id, Name = ro.Name }).First();
+
     }
 }

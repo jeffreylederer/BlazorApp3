@@ -2,6 +2,10 @@
 @inject BlazorApp3.Model.TournamentContext DB
 @using BlazorApp3.Model
 @inject NavigationManager NavigationManager
+@using System.ComponentModel.DataAnnotations;
+@using BlazorApp3.Services;
+@using System.Security.Cryptography
+@using System.Text
 
 <PageTitle>Create</PageTitle>
 
@@ -16,34 +20,33 @@
             <ValidationSummary class="text-danger" />
             <div class="mb-3">
                 <label for="username" class="form-label">Username:</label> 
-                <InputText id="username" @bind-Value="User.Username" class="form-control" /> 
+                <InputText id="username" @bind-Value="User.Username" class="form-control" />
                 <ValidationMessage For="() => User.Username" class="text-danger" /> 
             </div>        
             <div class="mb-3">
                 <label for="password" class="form-label">Password:</label> 
-                <InputText id="password" @bind-Value="User.Password" class="form-control" /> 
+                <InputText id="password" @bind-Value="User.Password" class="form-control" />
                 <ValidationMessage For="() => User.Password" class="text-danger" /> 
             </div>        
             <div class="mb-3">
                 <label for="displayname" class="form-label">DisplayName:</label> 
-                <InputText id="displayname" @bind-Value="User.DisplayName" class="form-control" /> 
+                <InputText id="displayname" @bind-Value="User.DisplayName" class="form-control" />
                 <ValidationMessage For="() => User.DisplayName" class="text-danger" /> 
-            </div>        
+            </div>
+
             <div class="mb-3">
-                <label for="isactive" class="form-label">IsActive:</label> 
-                <InputCheckbox id="isactive" @bind-Value="User.IsActive" class="form-check-input" /> 
-                <ValidationMessage For="() => User.IsActive" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="lastloggedin" class="form-label">LastLoggedIn:</label> 
-                <InputDate id="lastloggedin" @bind-Value="User.LastLoggedIn" class="form-control" /> 
-                <ValidationMessage For="() => User.LastLoggedIn" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="serialnumber" class="form-label">SerialNumber:</label> 
-                <InputText id="serialnumber" @bind-Value="User.SerialNumber" class="form-control" /> 
-                <ValidationMessage For="() => User.SerialNumber" class="text-danger" /> 
-            </div>        
+                <label for="Role" class="form-label">Role:</label>
+                <select id="Role" @bind="User.Role">
+                    @{
+                        foreach (var item in DB.Roles)
+                        {
+                            <option value="@item.Id">@item.Name</option>
+                        }
+                    }
+                </select>
+                <ValidationMessage For="() => User.Role" class="text-danger" />
+            </div>
+            
             <button type="submit" class="btn btn-primary">Create</button>
         </EditForm>
     </div>
@@ -56,13 +59,56 @@
 @code {
 
     [SupplyParameterFromForm]
-    public User User { get; set; } = new();
+    private UserDTO User { get; set; } = new();
 
     // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
     public async Task AddUser()
     {
-        DB.Users.Add(User);
+        var adminUser = new User()
+        {
+            Username = User.Username,
+            DisplayName = User.DisplayName,
+            IsActive = true,
+            LastLoggedIn = null,
+            Password = GetSha256Hash(User.Password),
+            SerialNumber = Guid.NewGuid().ToString("N")
+        };
+        DB.Users.Add(adminUser);
         await DB.SaveChangesAsync();
+        var userRole = new UserRole()
+            {
+                UserId = adminUser.Id,
+                RoleId = User.Role
+            };
+        DB.UserRoles.Add(userRole);
+        await DB.SaveChangesAsync();
+
         NavigationManager.NavigateTo("/users");
+    }
+
+    private class UserDTO
+    {
+        [Display(Name = "Username")]
+        [Required(ErrorMessage = "Please enter {0}")]
+        public string Username { get; set; }
+
+        [Display(Name = "Password")]
+        [Required(ErrorMessage = "Please enter {0}")]
+        public string Password { get; set; }
+
+
+        public string DisplayName { get; set; }
+
+        public int Role { get; set; }
+    }
+
+    private string GetSha256Hash(string input)
+    {
+        using (var hashAlgorithm = SHA256.Create())
+        {
+            var byteValue = Encoding.UTF8.GetBytes(input);
+            var byteHash = hashAlgorithm.ComputeHash(byteValue);
+            return Convert.ToBase64String(byteHash);
+        }
     }
 }

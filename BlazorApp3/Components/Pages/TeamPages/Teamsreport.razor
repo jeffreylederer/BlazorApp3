@@ -1,0 +1,25 @@
+﻿@page "/teams/teamsreport"
+@using BlazorApp3.Code
+@using QuestPDF.Fluent;
+@using QuestPDF.Infrastructure;
+
+
+<h3>TeamsReport</h3>
+
+<embed src="@GetPDF()" visible="false" width="2000" height="2000" />
+
+
+@code {
+    [SupplyParameterFromQuery]
+    public int leagueid { get; set; }
+
+
+    private string GetPDF()
+    {
+        var document = new TeamReportDoc(leagueid);
+        byte[] pdfBytes = document.GeneratePdf();
+        return "data:application/pdf;base64," + Convert.ToBase64String(pdfBytes);
+    }
+
+    
+}
