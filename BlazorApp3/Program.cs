@@ -63,8 +63,6 @@ builder.Services
 //AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
 builder.Services.AddBlazoredSessionStorage();
-builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
-
 
 builder.Services.AddAntiforgery(options =>
 {
