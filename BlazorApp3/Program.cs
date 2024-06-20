@@ -50,10 +50,6 @@ builder.Services
         options.LoginPath = "/NotAuthorized/RedirectToLogin";
         options.LogoutPath = "/logout";
         //options.AccessDeniedPath = new PathString("/Home/Forbidden/");
-        options.Cookie.Name = ".my.app1.cookie";
-        options.Cookie.HttpOnly = true;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-        options.Cookie.SameSite = SameSiteMode.Lax;
         options.Events = new CookieAuthenticationEvents
         {
             OnValidatePrincipal = context =>
@@ -62,7 +58,6 @@ builder.Services
                 return cookieValidatorService.ValidateAsync(context);
             }
         };
-       
     });
 #endregion
 //AutoMapper
@@ -71,7 +66,17 @@ builder.Services.AddBlazoredSessionStorage();
 builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
 
 
-builder.Services.AddAntiforgery();
+builder.Services.AddAntiforgery(options =>
+{
+    // Set Cookie properties using CookieBuilder properties†.
+    options.FormFieldName = "AntiforgeryFieldname";
+    options.HeaderName = "X-CSRF-TOKEN-HEADERNAME";
+    options.SuppressXFrameOptionsHeader = false;
+    options.Cookie.Name ="AFT";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+});
 
 
 

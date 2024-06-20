@@ -25,34 +25,33 @@
 <div class="row">
     <div class="col-md-4">
        
-        <EditForm Model="UserRegisterModel" OnValidSubmit="CreateUser" FormName="create" >
+        <EditForm Model="@UserRegisterModel" OnValidSubmit="CreateUser" FormName="create" Enhance>
             <DataAnnotationsValidator></DataAnnotationsValidator>
-            <input type="hidden" value="1" id="role"/>
-            
-            <ValidationSummary class="text-danger" />
+               <ValidationSummary class="text-danger" />
+            <input type="hidden" value="1" id="role" />
             <div class="form-group">
                 <label>User Name</label>
-                <InputText @bind-Value="UserRegisterModel.Username" class="form-control"></InputText>
+                <InputText  @bind-Value="UserRegisterModel.Username" id="Username" class="form-control"></InputText>
                 <ValidationMessage For="()=>UserRegisterModel.Username"></ValidationMessage>
             </div>
             <div class="form-group">
                 <label>Password</label>
-                <InputText type="password" @bind-Value="UserRegisterModel.Password" class="form-control"></InputText>
+                <InputText type="password"  @bind-Value="UserRegisterModel.Password" id="Password" class="form-control"></InputText>
                 <ValidationMessage For="()=>UserRegisterModel.Password"></ValidationMessage>
             </div>
             <div class="form-group">
                 <label>Confirm Password</label>
-                <InputText type="password" @bind-Value="UserRegisterModel.ConfirmPassword" class="form-control"></InputText>
+                <InputText type="password"  @bind-Value="UserRegisterModel.ConfirmPassword" id="ConfirmPassword" class="form-control"></InputText>
                 <ValidationMessage For="()=>UserRegisterModel.ConfirmPassword"></ValidationMessage>
             </div>
             <div class="form-group">
                 <label>Display Name</label>
-                <InputText @bind-Value="UserRegisterModel.DisplayName" class="form-control"></InputText>
+                <InputText  @bind-Value="UserRegisterModel.DisplayName" class="form-control" id="DisplayName"></InputText>
                 <ValidationMessage For="()=>UserRegisterModel.DisplayName"></ValidationMessage>
             </div>
-            <div class=form-group">
+           @*  <div class=form-group">
                 <label>Role</label>
-                <select @bind-Value="UserRegisterModel.Role" class="form-control">
+                <select @bind="@UserRegisterModel.Role" class="form-control" id="Role">
                     @{
                             foreach (var item in DB.Roles)
                             {
@@ -60,8 +59,8 @@
                             }
                       }
                 </select>
-                <ValidationMessage For="()=>UserRegisterModel.DisplayName"/>
-             </div> 
+               
+             </div>  *@
             <div class="form-group">
                 <button class="btn btn-primary">Register</button>
             </div>
