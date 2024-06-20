@@ -3,11 +3,10 @@ using AutoMapper.QueryableExtensions;
 using BlazerApp3.Models.DTOs;
 using BlazerApp3.Services;
 using BlazorApp3.Model;
-using BlazorApp3.Models.DTOs;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace BlazerApp1.Services
+namespace BlazerApp3.Services
 {
     public class UsersService : IUsersService
     {
@@ -25,7 +24,7 @@ namespace BlazerApp1.Services
             _uow = uow;
             _uow.CheckArgumentIsNull(nameof(_uow));
 
-            _users = _uow.Set<User>();
+            _users = dbContext.Set<User>();
 
             _securityService = securityService;
             _securityService.CheckArgumentIsNull(nameof(_securityService));
@@ -35,9 +34,14 @@ namespace BlazerApp1.Services
             _mapperConfiguration = mapper.ConfigurationProvider;
         }
 
-        public ValueTask<User> FindUserAsync(int userId)
+        public async ValueTask<User> FindUserAsync(int userId)
         {
-            return _users.FindAsync(userId);
+            User? user;
+            using(var context =  new TournamentContext())
+            {
+                user= await context.Users.FindAsync(userId);
+            }
+            return user;
         }
 
         public Task<User> FindUserAsync(string username, string password)
@@ -48,25 +52,36 @@ namespace BlazerApp1.Services
 
         public async Task<string> GetSerialNumberAsync(int userId)
         {
-            var user = await FindUserAsync(userId);
+            User? user;
+            using (var context = new TournamentContext())
+            {
+                user = await context.Users.FindAsync(userId);
+            }
             return user.SerialNumber;
         }
 
         public async Task UpdateUserLastActivityDateAsync(int userId)
         {
-            var user = await FindUserAsync(userId);
-            if (user.LastLoggedIn != null)
+            User? user;
+            using (var context = new TournamentContext())
             {
-                var updateLastActivityDate = TimeSpan.FromMinutes(2);
-                var currentUtc = DateTimeOffset.UtcNow;
-                var timeElapsed = currentUtc.Subtract(user.LastLoggedIn.Value);
-                if (timeElapsed < updateLastActivityDate)
-                {
+                user = await context.Users.FindAsync(userId);
+                if (user == null)
                     return;
+
+                if (user.LastLoggedIn != null)
+                {
+                    var updateLastActivityDate = TimeSpan.FromMinutes(2);
+                    var currentUtc = DateTimeOffset.UtcNow;
+                    var timeElapsed = currentUtc.Subtract(user.LastLoggedIn.Value);
+                    if (timeElapsed < updateLastActivityDate)
+                    {
+                        return;
+                    }
                 }
+                user.LastLoggedIn = DateTimeOffset.UtcNow;
+                await context.SaveChangesAsync();
             }
-            user.LastLoggedIn = DateTimeOffset.UtcNow;
-            await _uow.SaveChangesAsync();
         }
 
         public async Task<UserRegisterDTO> CreateUserAsync(UserRegisterDTO userRegisterDto)
@@ -85,8 +100,7 @@ namespace BlazerApp1.Services
                     RoleId = 2,
                     UserId = newUser.Id
                 };
-
-               // await _dbContext.UserRoles.AddAsync(item);
+                _dbContext.UserRoles.Add(item);
                 await _dbContext.SaveChangesAsync();
                 return _mapper.Map<UserRegisterDTO>(addedUser.Entity);
             }

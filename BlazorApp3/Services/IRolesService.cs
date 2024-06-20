@@ -1,7 +1,7 @@
 ﻿
 using BlazorApp3.Model;
 
-namespace BlazerApp1.Services
+namespace BlazerApp3.Services
 {
     public interface IRolesService
     {

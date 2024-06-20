@@ -53,5 +53,10 @@
                    join ro in DB.Roles on ur.RoleId equals ro.Id
                    select new Role { Id=ro.Id, Name = ro.Name }).First();
 
+        if (role is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+
     }
 }

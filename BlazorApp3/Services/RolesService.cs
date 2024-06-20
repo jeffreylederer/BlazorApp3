@@ -2,7 +2,7 @@
 using BlazorApp3.Model;
 using Microsoft.EntityFrameworkCore;
 
-namespace BlazerApp1.Services
+namespace BlazerApp3.Services
 {
     public class RolesService : IRolesService
     {

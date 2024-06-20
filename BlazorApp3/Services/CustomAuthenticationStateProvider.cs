@@ -3,7 +3,7 @@ using BlazerApp3.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
 
-namespace BlazerApp1.Services
+namespace BlazerApp3.Services
 {
     public class CustomAuthenticationStateProvider : RevalidatingServerAuthenticationStateProvider
     {

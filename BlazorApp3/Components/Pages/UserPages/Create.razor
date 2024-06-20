@@ -1,11 +1,19 @@
 ﻿@page "/users/create"
 @inject BlazorApp3.Model.TournamentContext DB
+@using BlazerApp3.Services
+@using BlazerApp3.Models.DTOs
+@using BlazerApp3.Services
 @using BlazorApp3.Model
 @inject NavigationManager NavigationManager
-@using System.ComponentModel.DataAnnotations;
+@using System.ComponentModel.DataAnnotations
 @using BlazorApp3.Services;
 @using System.Security.Cryptography
 @using System.Text
+@using Microsoft.AspNetCore.Authorization
+@inject IUsersService usersService
+
+@using Microsoft.AspNetCore.Antiforgery
+@attribute [RequireAntiforgeryToken(required: false)]
 
 <PageTitle>Create</PageTitle>
 
@@ -13,43 +21,54 @@
 
 <h4>User</h4>
 <hr />
+
 <div class="row">
     <div class="col-md-4">
-        <EditForm method="post" Model="User" OnValidSubmit="AddUser" FormName="create" Enhance>
-            <DataAnnotationsValidator />
+       
+        <EditForm Model="UserRegisterModel" OnValidSubmit="CreateUser" FormName="create" >
+            <DataAnnotationsValidator></DataAnnotationsValidator>
+            <input type="hidden" value="1" id="role"/>
+            
             <ValidationSummary class="text-danger" />
-            <div class="mb-3">
-                <label for="username" class="form-label">Username:</label> 
-                <InputText id="username" @bind-Value="User.Username" class="form-control" />
-                <ValidationMessage For="() => User.Username" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="password" class="form-label">Password:</label> 
-                <InputText id="password" @bind-Value="User.Password" class="form-control" />
-                <ValidationMessage For="() => User.Password" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="displayname" class="form-label">DisplayName:</label> 
-                <InputText id="displayname" @bind-Value="User.DisplayName" class="form-control" />
-                <ValidationMessage For="() => User.DisplayName" class="text-danger" /> 
+            <div class="form-group">
+                <label>User Name</label>
+                <InputText @bind-Value="UserRegisterModel.Username" class="form-control"></InputText>
+                <ValidationMessage For="()=>UserRegisterModel.Username"></ValidationMessage>
             </div>
-
-            <div class="mb-3">
-                <label for="Role" class="form-label">Role:</label>
-                <select id="Role" @bind="User.Role">
+            <div class="form-group">
+                <label>Password</label>
+                <InputText type="password" @bind-Value="UserRegisterModel.Password" class="form-control"></InputText>
+                <ValidationMessage For="()=>UserRegisterModel.Password"></ValidationMessage>
+            </div>
+            <div class="form-group">
+                <label>Confirm Password</label>
+                <InputText type="password" @bind-Value="UserRegisterModel.ConfirmPassword" class="form-control"></InputText>
+                <ValidationMessage For="()=>UserRegisterModel.ConfirmPassword"></ValidationMessage>
+            </div>
+            <div class="form-group">
+                <label>Display Name</label>
+                <InputText @bind-Value="UserRegisterModel.DisplayName" class="form-control"></InputText>
+                <ValidationMessage For="()=>UserRegisterModel.DisplayName"></ValidationMessage>
+            </div>
+            <div class=form-group">
+                <label>Role</label>
+                <select @bind-Value="UserRegisterModel.Role" class="form-control">
                     @{
-                        foreach (var item in DB.Roles)
-                        {
-                            <option value="@item.Id">@item.Name</option>
-                        }
-                    }
+                            foreach (var item in DB.Roles)
+                            {
+                                <option value="@item.Id">@item.Name</option>
+                            }
+                      }
                 </select>
-                <ValidationMessage For="() => User.Role" class="text-danger" />
+                <ValidationMessage For="()=>UserRegisterModel.DisplayName"/>
+             </div> 
+            <div class="form-group">
+                <button class="btn btn-primary">Register</button>
             </div>
             
-            <button type="submit" class="btn btn-primary">Create</button>
         </EditForm>
     </div>
+    
 </div>
 
 <div>
@@ -59,56 +78,13 @@
 @code {
 
     [SupplyParameterFromForm]
-    private UserDTO User { get; set; } = new();
+    private UserRegisterDTO UserRegisterModel { get; set; } = new();
 
     // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
-    public async Task AddUser()
+    public async Task CreateUser()
     {
-        var adminUser = new User()
-        {
-            Username = User.Username,
-            DisplayName = User.DisplayName,
-            IsActive = true,
-            LastLoggedIn = null,
-            Password = GetSha256Hash(User.Password),
-            SerialNumber = Guid.NewGuid().ToString("N")
-        };
-        DB.Users.Add(adminUser);
-        await DB.SaveChangesAsync();
-        var userRole = new UserRole()
-            {
-                UserId = adminUser.Id,
-                RoleId = User.Role
-            };
-        DB.UserRoles.Add(userRole);
-        await DB.SaveChangesAsync();
-
+        UserRegisterModel = await usersService.CreateUserAsync(UserRegisterModel);
         NavigationManager.NavigateTo("/users");
     }
 
-    private class UserDTO
-    {
-        [Display(Name = "Username")]
-        [Required(ErrorMessage = "Please enter {0}")]
-        public string Username { get; set; }
-
-        [Display(Name = "Password")]
-        [Required(ErrorMessage = "Please enter {0}")]
-        public string Password { get; set; }
-
-
-        public string DisplayName { get; set; }
-
-        public int Role { get; set; }
-    }
-
-    private string GetSha256Hash(string input)
-    {
-        using (var hashAlgorithm = SHA256.Create())
-        {
-            var byteValue = Encoding.UTF8.GetBytes(input);
-            var byteHash = hashAlgorithm.ComputeHash(byteValue);
-            return Convert.ToBase64String(byteHash);
-        }
-    }
-}
+ }

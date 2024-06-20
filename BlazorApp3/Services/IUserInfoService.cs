@@ -1,4 +1,4 @@
-﻿namespace BlazerApp1.Services;
+﻿namespace BlazerApp3.Services;
 
 public interface IUserInfoService
 {

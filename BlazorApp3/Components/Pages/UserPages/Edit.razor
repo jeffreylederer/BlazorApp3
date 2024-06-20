@@ -25,8 +25,8 @@
                     <ValidationSummary />
                    <div class="mb-3">
                         <label for="username" class="form-label">Username:</label>
-                        <InputText id="username" @bind-Value="User.Username" class="form-control" />
-                        <ValidationMessage For="() => User.Username" class="text-danger" />
+                        <span>@User.Username</span>
+                        
                     </div>
                    <div class="mb-3">
                         <label for="displayname" class="form-label">DisplayName:</label>
@@ -68,21 +68,29 @@
     [SupplyParameterFromForm]
     public UserDTOEdit? User { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        User? currentUser = await DB.Users.FirstOrDefaultAsync(m => m.Id == Id);
-        if (currentUser is null)
+        if (firstRender)
         {
-            NavigationManager.NavigateTo("notfound");
-        }
-        User = new UserDTOEdit()
+            User? currentUser = await DB.Users.FirstOrDefaultAsync(m => m.Id == Id);
+            if (currentUser is null)
             {
-                Username = currentUser.Username,
-                DisplayName = currentUser.DisplayName,
-                IsActive = currentUser.IsActive
-            };
-        var roleitem = await DB.UserRoles.Where(x => x.UserId == Id).FirstAsync();
-        User.Role = roleitem.RoleId;
+                NavigationManager.NavigateTo("notfound");
+            }
+            User = new UserDTOEdit()
+                {
+                    DisplayName = currentUser.DisplayName,
+                    IsActive = currentUser.IsActive,
+                    Username = currentUser.Username
+                };
+            var roleitem = await DB.UserRoles.Where(x => x.UserId == Id).FirstAsync();
+            if (roleitem is null)
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            User.Role = roleitem.RoleId;
+            StateHasChanged();
+        }
     }
 
     // To protect from overposting attacks, enable the specific properties you want to bind to.
@@ -124,9 +132,8 @@
     public class UserDTOEdit
     {
         [Display(Name = "Username")]
-        [Required(ErrorMessage = "Please enter {0}")]
-        public string Username { get; set; }
-
+        public string? Username { get; set; }
+        
         [Display(Name = "Is Active")]
         public bool IsActive { get; set; }
 

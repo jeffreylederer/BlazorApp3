@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using BlazerApp1.Services;
+using BlazerApp3.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlazorApp3.Model;

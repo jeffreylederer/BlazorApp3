@@ -3,7 +3,7 @@ using BlazerApp3.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
-namespace BlazerApp1.Services
+namespace BlazerApp3.Services
 {
     public class CookieValidatorService : ICookieValidatorService
     {

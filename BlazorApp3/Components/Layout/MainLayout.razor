@@ -1,13 +1,33 @@
-﻿@inherits LayoutComponentBase
+﻿@using BlazorApp3.Components.Pages.NotAuthorized
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject NavigationManager NavigationManager
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider GetAuthenticationStateAsync
+
+
+
+@inherits LayoutComponentBase
+
 
 <div class="page">
     <div class="sidebar">
+        <CascadingValue Value="this">
         <NavMenu />
+        </CascadingValue>
     </div>
 
     <main>
         <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+            <AuthorizeView>
+                <Authorized>
+                    Welcome @context.User.Identity.Name
+                    <a href="logout">Logout</a>
+                </Authorized>
+                <NotAuthorized>
+                    <p>Not authorized</p>
+                </NotAuthorized>
+            </AuthorizeView>
         </div>
 
         <article class="content px-4">
@@ -21,3 +41,16 @@
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
+
+@code {
+
+    [Parameter]
+    public ClaimsPrincipal? User { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authstate = await GetAuthenticationStateAsync.GetAuthenticationStateAsync();
+        var User = authstate.User;
+    }
+}
+

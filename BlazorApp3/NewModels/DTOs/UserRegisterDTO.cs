@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace BlazerApp1.Models.DTOs
+namespace BlazorApp3.Models.DTOs
 {
     public class UserRegisterDTO
     {

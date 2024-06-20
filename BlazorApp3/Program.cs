@@ -1,21 +1,21 @@
-﻿using BlazorApp3.Components;
-using BlazorApp3.Model;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
-using BlazerApp1.Services;
-using Microsoft.AspNetCore.Components.Authorization;
-using DNTCommon.Web.Core;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using BlazerApp1.Models.Mappings;
-using Blazored.SessionStorage;
-using Microsoft.Extensions.DependencyInjection;
+﻿using BlazerApp1.Models.Mappings;
 using BlazerApp3.Services;
+using BlazerApp3.Services;
+using BlazorApp3.Components;
+using BlazorApp3.Model;
+using Blazored.SessionStorage;
+using DNTCommon.Web.Core;
+using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+   
 
 var connectionString = builder.Configuration.GetConnectionString("LeagueApp") ?? throw new InvalidOperationException("Connection string 'LeagueApp' not found.");
 builder.Services.AddDbContextFactory<TournamentContext>(opt =>
@@ -29,7 +29,7 @@ builder.Services.AddDNTCommonWeb();
 //Authentication
 builder.Services.AddScoped<IUnitOfWork, TournamentContext>();
 builder.Services.AddScoped<IUsersService, UsersService>();
-builder.Services.AddScoped<IRolesService, RolesService>();
+//builder.Services.AddScoped<IRolesService, RolesService>();
 builder.Services.AddScoped<ISecurityService, SecurityService>();
 builder.Services.AddScoped<ICookieValidatorService, CookieValidatorService>();
 //builder.Services.AddScoped<IDbInitializerService, DbInitializerService>();
@@ -47,8 +47,8 @@ builder.Services
     .AddCookie(options =>
     {
         options.SlidingExpiration = false;
-        options.LoginPath = "/";
-        options.LogoutPath = "/";
+        options.LoginPath = "/NotAuthorized/RedirectToLogin";
+        options.LogoutPath = "/logout";
         //options.AccessDeniedPath = new PathString("/Home/Forbidden/");
         options.Cookie.Name = ".my.app1.cookie";
         options.Cookie.HttpOnly = true;
@@ -62,11 +62,18 @@ builder.Services
                 return cookieValidatorService.ValidateAsync(context);
             }
         };
+       
     });
 #endregion
 //AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
 builder.Services.AddBlazoredSessionStorage();
+builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
+
+
+builder.Services.AddAntiforgery();
+
+
 
 var app = builder.Build();
 
@@ -83,10 +90,12 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();
 
+
 #region authentication
 
 app.UseAuthentication();
 #endregion
+
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

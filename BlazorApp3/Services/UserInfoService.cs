@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components.Authorization;
 
-namespace BlazerApp1.Services;
+namespace BlazerApp3.Services;
 
 public class UserInfoService : IUserInfoService
 {

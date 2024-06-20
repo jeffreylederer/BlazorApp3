@@ -1,4 +1,4 @@
-﻿@page "/logut"
+﻿@page "/logout"
 
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Authentication.Cookies
@@ -22,7 +22,7 @@
         {
             await httpContextAccessor.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         }
-        NavigationManager.NavigateTo("/login");
+        NavigationManager.NavigateTo("/NotAuthorized/RedirectToLogin");
     }
 
 }
