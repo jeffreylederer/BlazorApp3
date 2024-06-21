@@ -1,0 +1,93 @@
+﻿@page "/welcome"
+
+@using BlazorApp3.Components.Layout
+@inherits LayoutComponentBase
+@layout MainLayout
+
+@inject BlazorApp3.Model.TournamentContext DB
+@using BlazorApp3.Model
+@using Microsoft.AspNetCore.Components
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor httpContextAccessor
+@inject AuthenticationStateProvider GetAuthenticationStateAsync
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using System.Security.Claims
+@inject ProtectedSessionStorage ProtectedSessionStore
+@rendermode InteractiveServer
+
+
+    
+@{
+    if (league == null)
+    {
+
+       <p>Loading ...</p>
+    }
+    else
+    {
+        <h2>Welcome to @league.LeagueName</h2>
+
+  
+
+        <p style="font-size: large; font-weight:200">You are a @Role </p>
+
+        <h2>Roles</h2>
+
+        <dl>
+            <dt>Observers</dt>
+            <dd>They can view all screens and reports in the league </dd>
+        </dl>
+        <dl>
+            <dt>Scorers</dt>
+            <dd>They can score matches and view all screens and reports in the league </dd>
+        </dl>
+        <dl>
+            <dt>League Administrators</dt>
+            <dd>They can edit the membership, players and schedule in the league, create and score matches </dd>
+        </dl>
+        <dl>
+            <dt>Site Administrators</dt>
+            <dd>They can be league administrator for any league and create leagues and users. </dd>
+        </dl>
+    }
+}
+
+
+@code {
+    [SupplyParameterFromQuery]
+    public int leagueid { get; set; }
+
+    public League? league;
+
+    public string Role;
+
+
+    protected override async Task OnAfterRenderAsync(bool firstTime)
+    {
+        if (firstTime)
+        {
+            await ProtectedSessionStore.SetAsync("leagueid", leagueid);
+            league = DB.Leagues.Find(leagueid);
+             var authstate = await GetAuthenticationStateAsync.GetAuthenticationStateAsync();
+            var user = authstate.User;
+            if (user != null)
+            {
+                foreach (var claim in user.Claims)
+                {
+                    if (claim.Type == ClaimTypes.Role)
+                    {
+                        Role = claim.Value;
+                        break;
+                    }
+                }
+            }
+            StateHasChanged();
+        }
+    }
+
+ 
+}

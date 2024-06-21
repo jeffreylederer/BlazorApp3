@@ -1,14 +1,11 @@
 ﻿@inherits LayoutComponentBase
 
-
 @using Microsoft.AspNetCore.Components.Authorization
 
 
 <div class="page">
     <div class="sidebar">
-        <CascadingValue Value="this">
-        <NavMenu />
-        </CascadingValue>
+        <LeagueMenu />
     </div>
 
     <main>
@@ -33,5 +30,6 @@
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
-}
+
+
 

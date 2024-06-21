@@ -1,7 +1,25 @@
 ﻿@page "/"
 
+@using Microsoft.AspNetCore.Components.QuickGrid
+@inject BlazorApp3.Model.TournamentContext DB
+@using BlazorApp3.Model
+
+
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1>Select League</h1>
 
-Welcome to your new app.
+
+<QuickGrid Class="table" Items="DB.Leagues.Where(x=>x.Active)">
+    <PropertyColumn Property="league => league.LeagueName"  Title="League"/>
+   
+    <TemplateColumn Context="league">
+        <a href="@($"/welcome/?leagueid={league.Id}")">Select</a>
+    </TemplateColumn>
+</QuickGrid>
+
+
+
+
+
+

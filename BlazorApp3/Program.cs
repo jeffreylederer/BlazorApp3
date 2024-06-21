@@ -29,10 +29,8 @@ builder.Services.AddDNTCommonWeb();
 //Authentication
 builder.Services.AddScoped<IUnitOfWork, TournamentContext>();
 builder.Services.AddScoped<IUsersService, UsersService>();
-//builder.Services.AddScoped<IRolesService, RolesService>();
 builder.Services.AddScoped<ISecurityService, SecurityService>();
 builder.Services.AddScoped<ICookieValidatorService, CookieValidatorService>();
-//builder.Services.AddScoped<IDbInitializerService, DbInitializerService>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
 builder.Services.AddScoped<IUserInfoService, UserInfoService>();
 builder.Services.AddHttpContextAccessor();

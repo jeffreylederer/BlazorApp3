@@ -1,19 +1,12 @@
 ﻿@page "/users/create"
-@inject BlazorApp3.Model.TournamentContext DB
-@using BlazerApp3.Services
+
 @using BlazerApp3.Models.DTOs
 @using BlazerApp3.Services
 @using BlazorApp3.Model
-@inject NavigationManager NavigationManager
-@using System.ComponentModel.DataAnnotations
-@using BlazorApp3.Services;
-@using System.Security.Cryptography
-@using System.Text
-@using Microsoft.AspNetCore.Authorization
-@inject IUsersService usersService
 
-@using Microsoft.AspNetCore.Antiforgery
-@attribute [RequireAntiforgeryToken(required: false)]
+@inject BlazorApp3.Model.TournamentContext DB
+@inject NavigationManager NavigationManager
+@inject IUsersService usersService
 
 <PageTitle>Create</PageTitle>
 
@@ -28,7 +21,7 @@
         <EditForm Model="@UserRegisterModel" OnValidSubmit="CreateUser" FormName="create" Enhance>
             <DataAnnotationsValidator></DataAnnotationsValidator>
                <ValidationSummary class="text-danger" />
-            <input type="hidden" value="1" id="role" />
+            <input type="hidden" value="1" id="Role" />
             <div class="form-group">
                 <label>User Name</label>
                 <InputText  @bind-Value="UserRegisterModel.Username" id="Username" class="form-control"></InputText>
@@ -44,16 +37,16 @@
                 <InputText type="password"  @bind-Value="UserRegisterModel.ConfirmPassword" id="ConfirmPassword" class="form-control"></InputText>
                 <ValidationMessage For="()=>UserRegisterModel.ConfirmPassword"></ValidationMessage>
             </div>
-            <div class="form-group">
+           @*  <div class="form-group">
                 <label>Display Name</label>
                 <InputText  @bind-Value="UserRegisterModel.DisplayName" class="form-control" id="DisplayName"></InputText>
                 <ValidationMessage For="()=>UserRegisterModel.DisplayName"></ValidationMessage>
             </div>
-           @*  <div class=form-group">
+            <div class=form-group">
                 <label>Role</label>
                 <select @bind="@UserRegisterModel.Role" class="form-control" id="Role">
                     @{
-                            foreach (var item in DB.Roles)
+                            foreach (var item in roles)
                             {
                                 <option value="@item.Id">@item.Name</option>
                             }
@@ -79,11 +72,18 @@
     [SupplyParameterFromForm]
     private UserRegisterDTO UserRegisterModel { get; set; } = new();
 
+    private List<Role>? roles;
+
     // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
     public async Task CreateUser()
     {
         UserRegisterModel = await usersService.CreateUserAsync(UserRegisterModel);
         NavigationManager.NavigateTo("/users");
+    }
+
+    protected override void OnInitialized()
+    {
+        var roles = DB.Roles.ToList();
     }
 
  }

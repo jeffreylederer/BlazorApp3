@@ -11,7 +11,7 @@
     <a href="memberships/create">Create New</a>
 </p>
 
-<QuickGrid Class="table" Items="DB.Memberships.OrderBy(x=>x.LastName)">
+<QuickGrid Class="table" Items="DB.Memberships.OrderBy(x=>x.LastName)" >
     <PropertyColumn Property="membership => membership.FirstName" />
     <PropertyColumn Property="membership => membership.LastName" />
     <PropertyColumn Property="membership => membership.FullName" />
