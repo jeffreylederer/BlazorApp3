@@ -1,11 +1,8 @@
 ﻿using BlazerApp1.Models.Mappings;
 using BlazerApp3.Services;
-using BlazerApp3.Services;
 using BlazorApp3.Components;
 using BlazorApp3.Model;
 using Blazored.SessionStorage;
-using DNTCommon.Web.Core;
-using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;

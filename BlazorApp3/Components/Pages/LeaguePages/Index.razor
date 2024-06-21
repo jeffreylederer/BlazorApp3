@@ -1,4 +1,9 @@
 ﻿@page "/leagues"
+
+@using BlazorApp3.Components.Layout
+@inherits LayoutComponentBase
+@layout LeagueLayout
+
 @using Microsoft.AspNetCore.Components.QuickGrid
 @inject BlazorApp3.Model.TournamentContext DB
 @using BlazorApp3.Model
