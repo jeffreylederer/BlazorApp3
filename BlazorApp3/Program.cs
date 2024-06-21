@@ -25,7 +25,7 @@ builder.Services.AddQuickGridEntityFrameworkAdapter();
 
 #region Authentication
 //for use SecurityTrimming
-builder.Services.AddDNTCommonWeb();
+//builder.Services.AddDNTCommonWeb();
 //Authentication
 builder.Services.AddScoped<IUnitOfWork, TournamentContext>();
 builder.Services.AddScoped<IUsersService, UsersService>();

@@ -1,9 +1,9 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
-@using System.Security.Claims
+
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">League App</a>
+        <a class="navbar-brand" href="">LeagueApp</a>
     </div>
 </div>
 
@@ -17,42 +17,64 @@
             </NavLink>
         </div>
 
-        @* <NavLink class="nav-link" @onclick="()=>expandSubNav = !expandSubNav">
-            <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> League Play
-        </NavLink>
-        @if (expandSubNav)
-        {
-            <NavLink class="expand-menu" href="Schedules">
-                <span>Schedule</span>
-            </NavLink>
-            <NavLink class="" href="Players">
-                <span>Players</span>
-            </NavLink>
-            <NavLink class="" href="Teams">
-                <span>Team</span>
-            </NavLink>
-        } *@
+        <AuthorizeView Roles="SiteAdmin, Admin">
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="memberships">
+                        <span class="bi  bi-list-nested-nav-menu" aria-hidden="true"></span> Membership
+                    </NavLink>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+        
+            <div class="nav-item px-3">
+                <NavLink class="nav-link">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> League Play
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="schedules">
+                <span class="bi-indent bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Schedule
+                </NavLink>
+            </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="memberships">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Membership
-            </NavLink>
-        </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="players">
+                    <span class="bi-indent bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Players
+                </NavLink>
+            </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="users">
-            <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Users
-        </NavLink>
-    </div>
-     
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="teams">
+                    <span class="bi-indent bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Teams
+                </NavLink>
+            </div>
+
+
+
+        <AuthorizeView Roles="SiteAdmin">
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="users">
+                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Users
+                    </NavLink>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+
     </nav>
 </div>
 
-@code {
 
-    private bool expandSubNav;
+@code {
+    bool showleague = false;
+
+
+
+    
+
+
 
 }
-
 
 

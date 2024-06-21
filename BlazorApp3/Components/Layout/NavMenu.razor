@@ -1,4 +1,7 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@using Microsoft.AspNetCore.Components.Authorization
+
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">LeagueApp</a>
     </div>
@@ -14,57 +17,32 @@
             </NavLink>
         </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="memberships">
-                <span class="bi  bi-list-nested-nav-menu" aria-hidden="true"></span> Membership
-            </NavLink>
-        </div>
-
-              <div class="nav-item px-3">
-            <NavLink class="nav-link" @onclick="ToggleNavMenu" >
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> League Play
-             </NavLink>
-             </div>
+        <AuthorizeView Roles="SiteAdmin, Admin">
+            <Authorized>
                 <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="schedules">
-                <span class="bi-indent bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Schedule
+                    <NavLink class="nav-link" href="memberships">
+                        <span class="bi  bi-list-nested-nav-menu" aria-hidden="true"></span> Membership
                     </NavLink>
                 </div>
+            </Authorized>
+        </AuthorizeView>
+       
 
+
+        <AuthorizeView Roles="SiteAdmin">
+            <Authorized>
                 <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="players">
-                <span class="bi-indent bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Players
-                    </NavLink>
-                </div>
-
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="teams">
-                <span class="bi-indent bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Teams
-                    </NavLink>
-                </div>
-        
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="users">
-            <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Users
-        </NavLink>
-    </div>
+                    <NavLink class="nav-link" href="users">
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Users
+                </NavLink>
+            </div>
+            </Authorized>
+        </AuthorizeView>
      
     </nav>
 </div>
 
 
-@code {
 
-    private bool expandSubNav=false;
-
-    void ToggleNavMenu()
-    {
-        expandSubNav = !expandSubNav;
-    }
-
-
-
-}
 
 
