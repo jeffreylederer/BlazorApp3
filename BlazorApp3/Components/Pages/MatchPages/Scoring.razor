@@ -1,0 +1,214 @@
+﻿@page "/matches/scoring"
+@using BlazorApp3.Components.Layout
+@inherits LayoutComponentBase
+@layout LeagueLayout
+
+@using Microsoft.EntityFrameworkCore
+@inject BlazorApp3.Model.TournamentContext DB
+@using BlazorApp3.Model
+@using System.Text
+@inject NavigationManager NavigationManager
+
+<h3>Scoring</h3>
+
+<h3>Match</h3>
+
+
+    @if(@GameDate == null)
+    {
+        <p>Loading</p>
+    }
+    else
+    {
+         <div class="row">
+            <div class="col-md-4">
+                <EditForm method="post" Model="TheScore" OnValidSubmit="UpdateScore" FormName="edit" Enhance>
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="mb-3">
+                        <label>Geame Date:</label>
+                       @GameDate
+                    </div>
+                    <div class="mb-3">
+                        <label>Rink:</label>
+                        @rink
+                    </div>
+                    <div class="mb-3">
+                        <label for="team1members" class="form-label">@team1members:</label>
+                        <InputNumber id="team1members" @bind-Value="TheScore.Team1Score" class="form-control" style="width:200px;"  />
+                        <ValidationMessage For="() => TheScore.Team1Score" class="text-danger" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="team2members" class="form-label">@team2members:</label>
+                        <InputNumber id="team2members" @bind-Value="TheScore.Team2Score" class="form-control" style="width:200px;" />
+                        <ValidationMessage For="() => TheScore.Team2Score" class="text-danger" />
+                    </div>
+
+                    <div class="mb-3">
+                    <label for="teamforfeit" class="form-label">Team Forfeiting:</label>
+
+                    <select class="form-control" id="teamforfeit" style="width:200px;" @bind="TheScore.TeamForfeit">
+                            @options
+                        </select>
+                        <ValidationMessage For="() => TheScore.TeamForfeit" class="text-danger" />
+                    </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+                </EditForm>
+            </div>
+        </div>
+    }
+
+
+@code {
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private Scrore? TheScore { get; set; } = new Scrore();
+
+    private string team1members;
+    private string team2members;
+
+    private MarkupString? options;
+
+    private string? GameDate;
+
+    private int rink;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var match = await DB.Matches.FirstOrDefaultAsync(x => x.Id == Id);
+        if (match is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+
+        Classes? theclasses = await (from m in DB.Matches.Where(x => x.Id == Id)
+                                     join s in DB.Schedules on m.WeekId equals s.Id
+                                     join l in DB.Leagues on s.Leagueid equals l.Id
+                                     select new Classes { league = l, schedule = s }).FirstOrDefaultAsync();
+
+        var league = theclasses.league;
+        var schedule = theclasses.schedule;
+        TheTeams? teams = await (from m in DB.Matches.Where(x => x.Id == Id)
+                                 join t1 in DB.Teams on m.TeamNo1 equals t1.Id
+                                 select new TheTeams { team = t1 }).FirstOrDefaultAsync();
+        Team? team1 = teams.team;
+        teams = await (from m in DB.Matches.Where(x => x.Id == Id)
+                       join t1 in DB.Teams on m.TeamNo2 equals t1.Id
+                       select new TheTeams { team = t1 }).FirstOrDefaultAsync();
+        Team? team2 = teams.team;
+
+        Name? skip1 = await (from p in DB.Players.Where(x => x.Id == team1.Skip)
+                             join m in DB.Memberships on p.MembershipId equals m.Id
+                             select new Name { NickName = m.NickName }).FirstOrDefaultAsync();
+
+        Name? skip2 = await (from p in DB.Players.Where(x => x.Id == team2.Skip)
+                             join m in DB.Memberships on p.MembershipId equals m.Id
+                             select new Name { NickName = m.NickName }).FirstOrDefaultAsync();
+        Name? lead1 = null, lead2 = null, viceskip1 = null, viceskip2 = null;
+
+
+
+        if(league.TeamSize < 3)
+        {
+            lead1 = await (from p in DB.Players.Where(x => x.Id == team1.Lead)
+                           join m in DB.Memberships on p.MembershipId equals m.Id
+                           select new Name { NickName = m.NickName }).FirstOrDefaultAsync();
+
+            lead2 = await (from p in DB.Players.Where(x => x.Id == team2.Lead)
+                           join m in DB.Memberships on p.MembershipId equals m.Id
+                           select new Name { NickName = m.NickName }).FirstOrDefaultAsync();
+        }
+
+        if (league.TeamSize == 3)
+        {
+            viceskip1 = await (from p in DB.Players.Where(x => x.Id == team1.ViceSkip)
+                               join m in DB.Memberships on p.MembershipId equals m.Id
+                               select new Name { NickName = m.NickName }).FirstOrDefaultAsync();
+
+            viceskip2 = await (from p in DB.Players.Where(x => x.Id == team2.ViceSkip)
+                               join m in DB.Memberships on p.MembershipId equals m.Id
+                               select new Name { NickName = m.NickName }).FirstOrDefaultAsync();
+        }
+
+        if (league.TeamSize == 1)
+        {
+            team1members = $"Team {team1.TeamNo} ({skip1.NickName})";
+            team2members = $"Team {team2.TeamNo} ({skip2.NickName})";
+        }
+        else if (league.TeamSize < 3)
+        {
+            team1members = $"Team {team1.TeamNo} ({skip1.NickName}, {lead1.NickName})";
+            team2members = $"Team {team2.TeamNo} ({skip2.NickName}, {lead2.NickName})";
+        }
+        else if (league.TeamSize == 3)
+        {
+            team1members = $"Team {team1.TeamNo} ({skip1.NickName}, {viceskip1.NickName}, {lead1.NickName})";
+            team2members = $"Team {team2.TeamNo} ({skip2.NickName}, {viceskip2.NickName}, {lead2.NickName})";
+        }
+
+        StringBuilder optionstr = new StringBuilder();
+        optionstr.AppendLine($"<option value='0' selected>No Forfeit</option>");
+        optionstr.AppendLine($"<option value='{team1.TeamNo}'>Team No. {team1.TeamNo}</option>");
+        optionstr.AppendLine($"<option value='{team2.TeamNo}'>Team No. {team2.TeamNo}</option>");
+        optionstr.AppendLine($"<option value='-1'>Both</option>");
+        options = new MarkupString(optionstr.ToString());
+
+        rink = match.Rink;
+        GameDate = match.Week.GameDate.ToShortDateString();
+    }
+
+    private async Task UpdateScore()
+    {
+        if(TheScore.TeamForfeit != 0)
+        {
+            TheScore.Team1Score = 0;
+            TheScore.Team2Score = 0;
+        }
+
+        var match = await DB.Matches.FirstOrDefaultAsync(x => x.Id == Id);
+        match.ForFeitId = TheScore.TeamForfeit;
+        match.Team1Score = TheScore.Team1Score;
+        match.Team1Score = TheScore.Team2Score;
+
+        DB.Attach(match!).State = EntityState.Modified;
+        try
+        {
+            await DB.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw;
+        }
+
+        NavigationManager.NavigateTo($"/matches?{match.Week.Id}");
+    }
+
+
+
+    private class Scrore
+    {
+        public int Team1Score {get;set;}
+        public int Team2Score {get;set;}
+        public int TeamForfeit { get; set; }
+    }
+
+    private class Name
+    {
+        public string? NickName { get; set; }
+    }
+
+    public class Classes
+    {
+        public League? league { get; set; }
+        public Schedule? schedule { get; set; }
+    }
+
+    public class TheTeams
+    {
+        public Team? team { get; set; }
+        
+    }
+}

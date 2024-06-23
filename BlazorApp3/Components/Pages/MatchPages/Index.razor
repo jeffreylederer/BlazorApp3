@@ -4,7 +4,6 @@
 @layout LeagueLayout
 
 @using Microsoft.AspNetCore.Components.Authorization
-@using Microsoft.AspNetCore.Components.QuickGrid
 @using BlazorApp3.Model
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
@@ -18,16 +17,15 @@
 <PageTitle>Index</PageTitle>
 
 @{
-    if (league != null && leagueid.HasValue)
+    if (league != null)
     {
 
         <h1>Matches</h1>
-        <EditForm method="post" Model="@schedule" OnValidSubmit="Change" FormName="create" Enhance>
-             <select id="id" @bind="@schedule.Id">
-                @weeks.ToString();
+        <span>Game Date:</span>
+             <select @onchange="Change">
+                @weeks;
               </select>
-             <button type="submit" class="btn btn-primary">Select Week</button>
-        </EditForm>
+             
         <p>
             <a href="matches/standingsreport?weekid=@thisweekid">This week's standings report</a><br />
             <a href="matches/scorecardreportt?weekid=@thisweekid" target="_blank">This week's score cards</a><br />
@@ -123,7 +121,7 @@
                         <td>
                             <AuthorizeView Roles="SiteAdmin,Admin">
                                 <Authorized>
-                                    <a href="/matches/scoring">Scoring</a>                   
+                                    <a href="/matches/scoring?Id=@item.Id">Scoring</a>                   
                                 </Authorized>
                             </AuthorizeView>
                         </td>
@@ -153,9 +151,12 @@
     int thisweekid;
     bool playoff;
     List<WeekItems>? Model;
-    string? weeks;
+    MarkupString? weeks;
     [SupplyParameterFromForm]
     MySchedule schedule { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private int? Id { get; set; }
 
 
 
@@ -170,11 +171,16 @@
                 league = DB.Leagues.Find(leagueid.Value);
                 if (league != null)
                 {
-                    Schedule? week = DB.Schedules.Where(x => x.Leagueid == leagueid.Value).FirstOrDefault();
-                    var weekid = week.Id;
+                    Schedule? week = DB.Schedules.Where(x => x.Leagueid == leagueid.Value).FirstOrDefault(); ;
+                    if (Id.HasValue)
+                        thisweekid = Id.Value;
+                    else
+                    {
+                        thisweekid = week.Id;
+                    }
                     playoff = week.PlayOffs;
-                    SetupWeek(weekid);
-                    
+                    SetupWeek(thisweekid);
+
                 }
             }
         }
@@ -193,7 +199,7 @@
             else
                 optionsList.AppendLine($"<option value='{@item.Id}'>{@item.GameDate.ToShortDateString()}</option>");
         }
-        weeks = optionsList.ToString();
+        weeks = new MarkupString(optionsList.ToString());
 
         Model = new List<WeekItems>();
         if (!playoff)
@@ -203,6 +209,7 @@
                                         join t2 in DB.Teams on m.TeamNo2 equals t2.Id
                                         select new WeekItems
                                             {
+                                                Id = m.Id,
                                                 Rink = m.Rink,
                                                 Team1No = m.TeamNo1,
                                                 Team2No = m.TeamNo2.Value,
@@ -311,9 +318,10 @@
         StateHasChanged();
     }
 
-    private async Task Change()
+    private async Task Change(ChangeEventArgs e)
     {
-        SetupWeek(schedule.Id);
+        var SelectedString = e.Value.ToString();
+        SetupWeek(int.Parse(SelectedString));
     }
 
     private void Moveup(int rink)
@@ -332,6 +340,7 @@
 
     private class WeekItems
     {
+        public int Id { get; set; }
         public int Rink { get; set; }
         public string? Team1 { get; set; }
         public string? Team1Style { get; set; }
