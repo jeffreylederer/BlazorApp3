@@ -50,6 +50,40 @@
                 </NavLink>
             </div>
 
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="matches">
+                <span class="bi-indent bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Matches
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/matches/byereport">
+                <span class="bi-indent bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Byes Report
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/matches/schedulereport">
+                <span class="bi-indent bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Schedule Report
+            </NavLink>
+        </div>
+
+        <AuthorizeView Roles="SiteAdmin,Admin">
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/matches/creatematches">
+                        <span class="bi-indent bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Create Matches
+                    </NavLink>
+                </div>
+
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/matches/clearschedule">
+                        <span class="bi-indent bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Clear Schedule
+                    </NavLink>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+
 
 
         <AuthorizeView Roles="SiteAdmin">

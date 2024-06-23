@@ -1,0 +1,364 @@
+﻿@page "/matches"
+@using BlazorApp3.Components.Layout
+@inherits LayoutComponentBase
+@layout LeagueLayout
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using BlazorApp3.Model
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using System.Text
+
+@inject ProtectedSessionStorage ProtectedSessionStore
+@inject BlazorApp3.Model.TournamentContext DB
+@rendermode InteractiveServer
+
+
+<PageTitle>Index</PageTitle>
+
+@{
+    if (league != null && leagueid.HasValue)
+    {
+
+        <h1>Matches</h1>
+        <EditForm method="post" Model="@schedule" OnValidSubmit="Change" FormName="create" Enhance>
+             <select id="id" @bind="@schedule.Id">
+                @weeks.ToString();
+              </select>
+             <button type="submit" class="btn btn-primary">Select Week</button>
+        </EditForm>
+        <p>
+            <a href="matches/standingsreport?weekid=@thisweekid">This week's standings report</a><br />
+            <a href="matches/scorecardreportt?weekid=@thisweekid" target="_blank">This week's score cards</a><br />
+        </p>
+        if (!@playoff)
+        {
+           
+            <table class="table-condensed table-striped">
+                <tr>
+                    <th>
+                         <AuthorizeView Roles="SiteAdmin,Admin">
+                              <Authorized>
+                                    <span>Exchange Rink</span>
+                              </Authorized>
+                         </AuthorizeView>
+                    </th>
+                    <th>
+                        Rink
+                    </th>
+
+                    <th>
+                        Team 1
+                    </th>
+                    <th>
+                        Team 2
+                    </th>
+                    <th>
+                        Team 1 Score
+                    </th>
+                    <th>
+                        Team 2 Score
+                    </th>
+                    <th>
+                        Forfeit
+                    </th>
+                    <th></th>
+                </tr>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                           
+                            <AuthorizeView Roles="SiteAdmin,Admin">
+                                <Authorized>
+                                   
+                                        <a @onclick="(() => Moveup(item.Rink))"><img src="~/images/uparrow.png" alt="Move Up one rink"  /></a>
+                                    
+                                </Authorized>
+                            </AuthorizeView>
+                           
+                        </td>
+                        <td>
+                            @item.Rink
+                        </td>
+                        <td>
+                           <span style="@item.Team1Style">@item.Team1</span>
+
+                        </td>
+                        <td>
+                            <span style="@item.Team2Style">@item.Team2</span>
+
+                        </td>                       
+                        <td>
+                            @if (@item.Forfeit==0)
+                            {
+                                @item.Team1Score
+                            }
+                        </td>
+
+                        <td>
+                            @if (@item.Forfeit == 0)
+                            {
+                                @item.Team2Score
+                            }
+                        </td>
+                        <td>
+                            @if (@item.Forfeit > 0)
+                            {
+                                if (@item.Team1No == item.Forfeit)
+                                {
+                                    @item.Team1No
+                                }
+                                else
+                                {
+                                    @item.Team2No
+                                }
+                            }
+                            else if (item.Forfeit == -1)
+                            {
+                                <span>Both</span>
+                            }
+                        </td>
+                        <td>
+                            <AuthorizeView Roles="SiteAdmin,Admin">
+                                <Authorized>
+                                    <a href="/matches/scoring">Scoring</a>                   
+                                </Authorized>
+                            </AuthorizeView>
+                        </td>
+
+                    </tr>
+                }
+            </table>
+            <span style="color: red;">Teams with players in wheelchairs are highlighted in red</span>
+        }
+        else
+        {
+            <p>This is a playoff week</p>
+        }
+
+        
+    }
+    else
+    {
+        <p>Loading...</p>
+    }
+}
+
+@code
+{
+    int? leagueid;
+    League? league;
+    int thisweekid;
+    bool playoff;
+    List<WeekItems>? Model;
+    string? weeks;
+    [SupplyParameterFromForm]
+    MySchedule schedule { get; set; } = new();
+
+
+
+    protected override async Task OnAfterRenderAsync(bool firstTime)
+    {
+        if (firstTime)
+        {
+            ProtectedBrowserStorageResult<int> result = await ProtectedSessionStore.GetAsync<int>("leagueid");
+            if(result.Success)
+            {
+                leagueid = result.Value;
+                league = DB.Leagues.Find(leagueid.Value);
+                if (league != null)
+                {
+                    Schedule? week = DB.Schedules.Where(x => x.Leagueid == leagueid.Value).FirstOrDefault();
+                    var weekid = week.Id;
+                    playoff = week.PlayOffs;
+                    SetupWeek(weekid);
+                    
+                }
+            }
+        }
+    }
+
+
+    private void SetupWeek(int weekid)
+    {
+        thisweekid = weekid;
+
+        StringBuilder optionsList = new StringBuilder();
+        foreach (var item in DB.Schedules.Where(x => x.Leagueid == league.Id).ToList())
+        {
+            if (item.Id == thisweekid)
+                optionsList.AppendLine($"<option value='{@item.Id}' selected>{@item.GameDate.ToShortDateString()}</option>");
+            else
+                optionsList.AppendLine($"<option value='{@item.Id}'>{@item.GameDate.ToShortDateString()}</option>");
+        }
+        weeks = optionsList.ToString();
+
+        Model = new List<WeekItems>();
+        if (!playoff)
+        {
+            List<WeekItems> newModel = (from m in DB.Matches.Where(x => x.WeekId == weekid)
+                                        join t1 in DB.Teams on m.TeamNo1 equals t1.Id
+                                        join t2 in DB.Teams on m.TeamNo2 equals t2.Id
+                                        select new WeekItems
+                                            {
+                                                Rink = m.Rink,
+                                                Team1No = m.TeamNo1,
+                                                Team2No = m.TeamNo2.Value,
+                                                Team1Score = m.Team1Score,
+                                                Team2Score = m.Team2Score,
+                                                Forfeit = m.ForFeitId
+                                            }
+                         ).OrderBy(x => x.Rink).ToList();
+
+            foreach (WeekItems item in newModel)
+            {
+                var index = Model.FindIndex(s => s.Rink == item.Rink);
+
+                TeamMate lead1 = new TeamMate();
+                TeamMate lead2 = new TeamMate();
+                TeamMate viceskip1 = new TeamMate();
+                TeamMate viceskip2 = new TeamMate();
+
+
+                TeamMate skip1 = (from t in DB.Teams.Where(x => x.Id == item.Team1No)
+                                  join p in DB.Players on t.Skip equals p.Id
+                                  join m in DB.Memberships on p.MembershipId equals m.Id
+                                  select new TeamMate
+                                      {
+                                          Name = m.NickName,
+                                          WheelChair = m.Wheelchair
+                                      }).ToList().First();
+
+                TeamMate skip2 = (from t in DB.Teams.Where(x => x.Id == item.Team2No)
+                                  join p in DB.Players on t.Skip equals p.Id
+                                  join m in DB.Memberships on p.MembershipId equals m.Id
+                                  select new TeamMate
+                                      {
+                                          Name = m.NickName,
+                                          WheelChair = m.Wheelchair
+                                      }
+                ).ToList().First();
+
+
+                item.Team1 = skip1.Name;
+                item.Team2 = skip2.Name;
+                item.Team1Style = skip1.WheelChair ? "color:red;" : "";
+                item.Team2Style = skip2.WheelChair ? "color:red;" : "";
+
+
+                if (league.TeamSize < 3)
+                {
+                    lead1 = (from t in DB.Teams.Where(x => x.Id == item.Team1No)
+                             join p in DB.Players on t.Lead equals p.Id
+                             join m in DB.Memberships on p.MembershipId equals m.Id
+                             select new TeamMate
+                                 {
+                                     Name = m.NickName,
+                                     WheelChair = m.Wheelchair
+                                 }).ToList().First();
+
+                    lead2 = (from t in DB.Teams.Where(x => x.Id == item.Team2No)
+                             join p in DB.Players on t.Lead equals p.Id
+                             join m in DB.Memberships on p.MembershipId equals m.Id
+                             select new TeamMate
+                                 {
+                                     Name = m.NickName,
+                                     WheelChair = m.Wheelchair
+                                 }
+                    ).ToList().First();
+
+
+                    item.Team1 = $"{skip1.Name}, {lead1.Name}";
+                    item.Team2 = $"{skip2.Name}, {lead2.Name}";
+                    item.Team1Style = skip1.WheelChair || lead1.WheelChair ? "color:red;" : "";
+                    item.Team2Style = skip2.WheelChair || lead2.WheelChair ? "color:red;" : "";
+                }
+
+                if (league.TeamSize == 3)
+                {
+                    viceskip1 = (from t in DB.Teams.Where(x => x.Id == item.Team1No)
+                                 join p in DB.Players on t.ViceSkip equals p.Id
+                                 join m in DB.Memberships on p.MembershipId equals m.Id
+                                 select new TeamMate
+                                     {
+                                         Name = m.NickName,
+                                         WheelChair = m.Wheelchair
+                                     }).ToList().First();
+
+                    viceskip2 = (from t in DB.Teams.Where(x => x.Id == item.Team2No)
+                                 join p in DB.Players on t.ViceSkip equals p.Id
+                                 join m in DB.Memberships on p.MembershipId equals m.Id
+                                 select new TeamMate
+                                     {
+                                         Name = m.NickName,
+                                         WheelChair = m.Wheelchair
+                                     }
+                    ).ToList().First();
+
+
+                    item.Team1 = $"{skip1.Name}, {viceskip1.Name}, {lead1.Name}";
+                    item.Team2 = $"{skip2.Name}, {viceskip2.Name}, {lead2.Name}";
+                    item.Team1Style = skip1.WheelChair || lead1.WheelChair || viceskip1.WheelChair ? "color:red;" : "";
+                    item.Team2Style = skip2.WheelChair || lead2.WheelChair || viceskip2.WheelChair ? "color:red;" : "";
+                }
+
+                Model.Add(item);
+            }
+            Model.OrderBy(x => x.Rink);
+        }
+        StateHasChanged();
+    }
+
+    private async Task Change()
+    {
+        SetupWeek(schedule.Id);
+    }
+
+    private void Moveup(int rink)
+    {
+
+        var index = Model.FindIndex(s => s.Rink == rink); 
+        if(index > 0)
+        {
+            var rink2 = Model[index+1].Rink;
+            Model[index].Rink = rink2;
+            Model[index+1].Rink = rink;
+        }
+        StateHasChanged();
+    }
+
+
+    private class WeekItems
+    {
+        public int Rink { get; set; }
+        public string? Team1 { get; set; }
+        public string? Team1Style { get; set; }
+        public int Team1Score { get; set; }
+        public int Team1No { get; set; }
+        public string? Team2 { get; set; }
+        public int Team2Score { get; set; }
+        public int Team2No { get; set; }
+        public string? Team2Style { get; set; }
+        public int? Forfeit { get; set; }
+    }
+
+    private class Weeks
+    {
+        public int weekid { get; set; }
+        public string? date { get; set; }
+    }
+
+    private class TeamMate
+    {
+        public string Name { get; set; }
+        public bool WheelChair { get; set; }
+
+    }
+
+    public class MySchedule
+    {
+        public int Id { get; set; }
+    }
+}
