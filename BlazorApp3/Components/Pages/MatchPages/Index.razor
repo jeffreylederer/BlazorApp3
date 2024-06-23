@@ -8,6 +8,7 @@
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using System.Text
+@using Microsoft.AspNetCore.Components.QuickGrid
 
 @inject ProtectedSessionStorage ProtectedSessionStore
 @inject BlazorApp3.Model.TournamentContext DB
@@ -21,114 +22,42 @@
     {
 
         <h1>Matches</h1>
-        <span>Game Date:</span>
-             <select @onchange="Change">
-                @weeks;
-              </select>
-             
+        <EditForm method="post" Model="@schedule" OnValidSubmit="Change" FormName="create" Enhance>
+            <select id="id" @bind="@schedule.Id">
+                @weeks
+            </select>
+            <button type="submit" class="btn btn-primary">Select Week</button>
+        </EditForm>
+
         <p>
             <a href="matches/standingsreport?weekid=@thisweekid">This week's standings report</a><br />
             <a href="matches/scorecardreportt?weekid=@thisweekid" target="_blank">This week's score cards</a><br />
         </p>
         if (!@playoff)
         {
-           
-            <table class="table-condensed table-striped">
-                <tr>
-                    <th>
-                         <AuthorizeView Roles="SiteAdmin,Admin">
-                              <Authorized>
-                                    <span>Exchange Rink</span>
-                              </Authorized>
-                         </AuthorizeView>
-                    </th>
-                    <th>
-                        Rink
-                    </th>
-
-                    <th>
-                        Team 1
-                    </th>
-                    <th>
-                        Team 2
-                    </th>
-                    <th>
-                        Team 1 Score
-                    </th>
-                    <th>
-                        Team 2 Score
-                    </th>
-                    <th>
-                        Forfeit
-                    </th>
-                    <th></th>
-                </tr>
-                @foreach (var item in Model)
-                {
-                    <tr>
-                        <td>
-                           
-                            <AuthorizeView Roles="SiteAdmin,Admin">
-                                <Authorized>
-                                   
-                                        <a @onclick="(() => Moveup(item.Rink))"><img src="~/images/uparrow.png" alt="Move Up one rink"  /></a>
-                                    
-                                </Authorized>
-                            </AuthorizeView>
-                           
-                        </td>
-                        <td>
-                            @item.Rink
-                        </td>
-                        <td>
-                           <span style="@item.Team1Style">@item.Team1</span>
-
-                        </td>
-                        <td>
-                            <span style="@item.Team2Style">@item.Team2</span>
-
-                        </td>                       
-                        <td>
-                            @if (@item.Forfeit==0)
-                            {
-                                @item.Team1Score
-                            }
-                        </td>
-
-                        <td>
-                            @if (@item.Forfeit == 0)
-                            {
-                                @item.Team2Score
-                            }
-                        </td>
-                        <td>
-                            @if (@item.Forfeit > 0)
-                            {
-                                if (@item.Team1No == item.Forfeit)
-                                {
-                                    @item.Team1No
-                                }
-                                else
-                                {
-                                    @item.Team2No
-                                }
-                            }
-                            else if (item.Forfeit == -1)
-                            {
-                                <span>Both</span>
-                            }
-                        </td>
-                        <td>
-                            <AuthorizeView Roles="SiteAdmin,Admin">
-                                <Authorized>
-                                    <a href="/matches/scoring?Id=@item.Id">Scoring</a>                   
-                                </Authorized>
-                            </AuthorizeView>
-                        </td>
-
-                    </tr>
-                }
-            </table>
+           <QuickGrid Class="table table-striped table-condensed" Items="@QModel" >
+                <TemplateColumn Context="league">
+                    <AuthorizeView Roles ="Admin,SiteAdmin">
+                        <AuthorizeView>
+                            <a @onclick="(() => Moveup(league.Rink))"><img src="~/images/uparrow.png" /></a>
+                        </AuthorizeView>
+                    </AuthorizeView>
+                </TemplateColumn>
+                <PropertyColumn Property="Model => Model.Rink" Title="Rink"/>
+                <PropertyColumn Property="Model => Model.Team1" Title="Team 1"/>
+                <PropertyColumn Property="Model => Model.Team2" Title="Team 2" />
+                <PropertyColumn Property="Model => Model.Team1Score" Title="Team 1 Score" />
+                <PropertyColumn Property="Model => Model.Team2Score" Title="Team 2Score" />
+                <PropertyColumn Property="Model => Model.Forfeit" Title="Team Forfeiting" />
+                <TemplateColumn Context="league">
+                    <AuthorizeView Roles ="Admin,SiteAdmin">
+                        <AuthorizeView>
+                            <a href="@($"matches/scoring?id={league.Id}")">Scoring</a>
+                        </AuthorizeView>
+                    </AuthorizeView>
+                </TemplateColumn>
+            </QuickGrid>
+ 
             <span style="color: red;">Teams with players in wheelchairs are highlighted in red</span>
         }
         else
@@ -150,7 +79,7 @@
     League? league;
     int thisweekid;
     bool playoff;
-    List<WeekItems>? Model;
+    IQueryable<WeekItems>? QModel=null;
     MarkupString? weeks;
     [SupplyParameterFromForm]
     MySchedule schedule { get; set; } = new();
@@ -201,9 +130,10 @@
         }
         weeks = new MarkupString(optionsList.ToString());
 
-        Model = new List<WeekItems>();
+
         if (!playoff)
         {
+            List<WeekItems> Model = new List<WeekItems>();
             List<WeekItems> newModel = (from m in DB.Matches.Where(x => x.WeekId == weekid)
                                         join t1 in DB.Teams on m.TeamNo1 equals t1.Id
                                         join t2 in DB.Teams on m.TeamNo2 equals t2.Id
@@ -314,27 +244,38 @@
                 Model.Add(item);
             }
             Model.OrderBy(x => x.Rink);
+            QModel = Model.AsQueryable();
         }
         StateHasChanged();
     }
 
-    private async Task Change(ChangeEventArgs e)
+    private async Task Change()
     {
-        var SelectedString = e.Value.ToString();
-        SetupWeek(int.Parse(SelectedString));
+        SetupWeek(schedule.Id);
     }
 
-    private void Moveup(int rink)
+    private async Task  Moveup(int rink)
     {
-
-        var index = Model.FindIndex(s => s.Rink == rink); 
-        if(index > 0)
+        var Model = QModel.ToList();
+        var index = Model.FindIndex(s => s.Rink == rink);
+        if (index > 0)
         {
-            var rink2 = Model[index+1].Rink;
-            Model[index].Rink = rink2;
-            Model[index+1].Rink = rink;
+            var rink2 = Model[index-1].Rink;
+
+            var mr1 = await DB.Matches.Where(x => x.WeekId == thisweekid && x.Rink == rink).FirstOrDefaultAsync();
+            var mr2 = await DB.Matches.Where(x => x.WeekId == thisweekid && x.Rink == rink2).FirstOrDefaultAsync();
+            mr1.Rink = rink2;
+            mr2.Rink = rink;
+            DB.Attach(mr1!).State = EntityState.Modified;
+            DB.Attach(mr2!).State = EntityState.Modified;
+            try
+            {
+                await DB.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException) { }
+            SetupWeek(mr1.WeekId);
         }
-        StateHasChanged();
+       
     }
 
 
