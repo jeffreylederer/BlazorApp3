@@ -8,15 +8,16 @@
 @using BlazorApp3.Model
 @using System.Text
 @inject NavigationManager NavigationManager
+@rendermode InteractiveServer
 
 <h3>Scoring</h3>
 
 <h3>Match</h3>
 
 
-    @if(@GameDate == null)
+    @if(string.IsNullOrEmpty(GameDate))
     {
-        <p>Loading</p>
+        <p>Loading...</p>
     }
     else
     {
@@ -57,6 +58,8 @@
                 </EditForm>
             </div>
         </div>
+
+        <a href="matches?id=@weekid">Back to List</a>
     }
 
 
@@ -74,90 +77,103 @@
 
     private string? GameDate;
 
+    private int weekid;
+
     private int rink;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        var match = await DB.Matches.FirstOrDefaultAsync(x => x.Id == Id);
-        if (match is null)
+        if (firstRender)
         {
-            NavigationManager.NavigateTo("notfound");
-        }
+            var match = await DB.Matches.FirstOrDefaultAsync(x => x.Id == Id);
+            if (match is null)
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
 
-        Classes? theclasses = await (from m in DB.Matches.Where(x => x.Id == Id)
-                                     join s in DB.Schedules on m.WeekId equals s.Id
-                                     join l in DB.Leagues on s.Leagueid equals l.Id
-                                     select new Classes { league = l, schedule = s }).FirstOrDefaultAsync();
+            Classes? theclasses = await (from m in DB.Matches.Where(x => x.Id == Id)
+                                         join s in DB.Schedules on m.WeekId equals s.Id
+                                         join l in DB.Leagues on s.Leagueid equals l.Id
+                                         select new Classes { league = l, schedule = s }).FirstOrDefaultAsync();
 
-        var league = theclasses.league;
-        var schedule = theclasses.schedule;
-        TheTeams? teams = await (from m in DB.Matches.Where(x => x.Id == Id)
-                                 join t1 in DB.Teams on m.TeamNo1 equals t1.Id
-                                 select new TheTeams { team = t1 }).FirstOrDefaultAsync();
-        Team? team1 = teams.team;
-        teams = await (from m in DB.Matches.Where(x => x.Id == Id)
-                       join t1 in DB.Teams on m.TeamNo2 equals t1.Id
-                       select new TheTeams { team = t1 }).FirstOrDefaultAsync();
-        Team? team2 = teams.team;
+            var league = theclasses.league;
+            var schedule = theclasses.schedule;
+            weekid = schedule.Id;
+            TheTeams? teams = await (from m in DB.Matches.Where(x => x.Id == Id)
+                                     join t1 in DB.Teams on m.TeamNo1 equals t1.Id
+                                     select new TheTeams { team = t1 }).FirstOrDefaultAsync();
+            Team? team1 = teams.team;
+            teams = await (from m in DB.Matches.Where(x => x.Id == Id)
+                           join t1 in DB.Teams on m.TeamNo2 equals t1.Id
+                           select new TheTeams { team = t1 }).FirstOrDefaultAsync();
+            Team? team2 = teams.team;
 
-        Name? skip1 = await (from p in DB.Players.Where(x => x.Id == team1.Skip)
-                             join m in DB.Memberships on p.MembershipId equals m.Id
-                             select new Name { NickName = m.NickName }).FirstOrDefaultAsync();
+            Name? skip1 = await (from p in DB.Players.Where(x => x.Id == team1.Skip)
+                                 join m in DB.Memberships on p.MembershipId equals m.Id
+                                 select new Name { NickName = m.NickName }).FirstOrDefaultAsync();
 
-        Name? skip2 = await (from p in DB.Players.Where(x => x.Id == team2.Skip)
-                             join m in DB.Memberships on p.MembershipId equals m.Id
-                             select new Name { NickName = m.NickName }).FirstOrDefaultAsync();
-        Name? lead1 = null, lead2 = null, viceskip1 = null, viceskip2 = null;
+            Name? skip2 = await (from p in DB.Players.Where(x => x.Id == team2.Skip)
+                                 join m in DB.Memberships on p.MembershipId equals m.Id
+                                 select new Name { NickName = m.NickName }).FirstOrDefaultAsync();
+            Name? lead1 = null, lead2 = null, viceskip1 = null, viceskip2 = null;
 
 
 
-        if(league.TeamSize < 3)
-        {
-            lead1 = await (from p in DB.Players.Where(x => x.Id == team1.Lead)
-                           join m in DB.Memberships on p.MembershipId equals m.Id
-                           select new Name { NickName = m.NickName }).FirstOrDefaultAsync();
-
-            lead2 = await (from p in DB.Players.Where(x => x.Id == team2.Lead)
-                           join m in DB.Memberships on p.MembershipId equals m.Id
-                           select new Name { NickName = m.NickName }).FirstOrDefaultAsync();
-        }
-
-        if (league.TeamSize == 3)
-        {
-            viceskip1 = await (from p in DB.Players.Where(x => x.Id == team1.ViceSkip)
+            if (league.TeamSize < 3)
+            {
+                lead1 = await (from p in DB.Players.Where(x => x.Id == team1.Lead)
                                join m in DB.Memberships on p.MembershipId equals m.Id
                                select new Name { NickName = m.NickName }).FirstOrDefaultAsync();
 
-            viceskip2 = await (from p in DB.Players.Where(x => x.Id == team2.ViceSkip)
+                lead2 = await (from p in DB.Players.Where(x => x.Id == team2.Lead)
                                join m in DB.Memberships on p.MembershipId equals m.Id
                                select new Name { NickName = m.NickName }).FirstOrDefaultAsync();
-        }
+            }
 
-        if (league.TeamSize == 1)
-        {
-            team1members = $"Team {team1.TeamNo} ({skip1.NickName})";
-            team2members = $"Team {team2.TeamNo} ({skip2.NickName})";
-        }
-        else if (league.TeamSize < 3)
-        {
-            team1members = $"Team {team1.TeamNo} ({skip1.NickName}, {lead1.NickName})";
-            team2members = $"Team {team2.TeamNo} ({skip2.NickName}, {lead2.NickName})";
-        }
-        else if (league.TeamSize == 3)
-        {
-            team1members = $"Team {team1.TeamNo} ({skip1.NickName}, {viceskip1.NickName}, {lead1.NickName})";
-            team2members = $"Team {team2.TeamNo} ({skip2.NickName}, {viceskip2.NickName}, {lead2.NickName})";
-        }
+            if (league.TeamSize == 3)
+            {
+                viceskip1 = await (from p in DB.Players.Where(x => x.Id == team1.ViceSkip)
+                                   join m in DB.Memberships on p.MembershipId equals m.Id
+                                   select new Name { NickName = m.NickName }).FirstOrDefaultAsync();
 
-        StringBuilder optionstr = new StringBuilder();
-        optionstr.AppendLine($"<option value='0' selected>No Forfeit</option>");
-        optionstr.AppendLine($"<option value='{team1.TeamNo}'>Team No. {team1.TeamNo}</option>");
-        optionstr.AppendLine($"<option value='{team2.TeamNo}'>Team No. {team2.TeamNo}</option>");
-        optionstr.AppendLine($"<option value='-1'>Both</option>");
-        options = new MarkupString(optionstr.ToString());
+                viceskip2 = await (from p in DB.Players.Where(x => x.Id == team2.ViceSkip)
+                                   join m in DB.Memberships on p.MembershipId equals m.Id
+                                   select new Name { NickName = m.NickName }).FirstOrDefaultAsync();
+            }
 
-        rink = match.Rink;
-        GameDate = match.Week.GameDate.ToShortDateString();
+            if (league.TeamSize == 1)
+            {
+                team1members = $"Team {team1.TeamNo} ({skip1.NickName})";
+                team2members = $"Team {team2.TeamNo} ({skip2.NickName})";
+            }
+            else if (league.TeamSize < 3)
+            {
+                team1members = $"Team {team1.TeamNo} ({skip1.NickName}, {lead1.NickName})";
+                team2members = $"Team {team2.TeamNo} ({skip2.NickName}, {lead2.NickName})";
+            }
+            else if (league.TeamSize == 3)
+            {
+                team1members = $"Team {team1.TeamNo} ({skip1.NickName}, {viceskip1.NickName}, {lead1.NickName})";
+                team2members = $"Team {team2.TeamNo} ({skip2.NickName}, {viceskip2.NickName}, {lead2.NickName})";
+            }
+
+
+
+            rink = match.Rink;
+            GameDate = match.Week.GameDate.ToShortDateString();
+            TheScore.Team1Score = match.Team2Score;
+            TheScore.Team2Score = match.Team2Score;
+            TheScore.TeamForfeit = match.ForFeitId;
+            string selected;
+
+            StringBuilder optionstr = new StringBuilder();
+            optionstr.AppendLine($"<option value='0'>No Forfeit</option>");
+            optionstr.AppendLine($"<option value='{team1.TeamNo}'>Team No. {team1.TeamNo}</option>");
+            optionstr.AppendLine($"<option value='{team2.TeamNo}'>Team No. {team2.TeamNo}</option>");
+            optionstr.AppendLine($"<option value='-1'>Both</ option > ");
+            options = new MarkupString(optionstr.ToString());
+            StateHasChanged();
+        }
     }
 
     private async Task UpdateScore()
@@ -171,7 +187,7 @@
         var match = await DB.Matches.FirstOrDefaultAsync(x => x.Id == Id);
         match.ForFeitId = TheScore.TeamForfeit;
         match.Team1Score = TheScore.Team1Score;
-        match.Team1Score = TheScore.Team2Score;
+        match.Team2Score = TheScore.Team2Score;
 
         DB.Attach(match!).State = EntityState.Modified;
         try
@@ -183,7 +199,7 @@
             throw;
         }
 
-        NavigationManager.NavigateTo($"/matches?{match.Week.Id}");
+        NavigationManager.NavigateTo($"/matches?id={match.Week.Id}");
     }
 
 

@@ -126,6 +126,7 @@
     private void SetupWeek(int weekid)
     {
         thisweekid = weekid;
+        schedule.Id = thisweekid;
 
         StringBuilder optionsList = new StringBuilder();
         foreach (var item in DB.Schedules.Where(x => x.Leagueid == league.Id).OrderBy(x=>x.GameDate).ToList())
@@ -148,11 +149,13 @@
                                             {
                                                 Id = m.Id,
                                                 Rink = m.Rink,
-                                                Team1No = m.TeamNo1,
-                                                Team2No = m.TeamNo2.Value,
+                                                Team1No = t1.TeamNo,
+                                                Team2No = t2.TeamNo,
                                                 Team1Score = m.Team1Score,
                                                 Team2Score = m.Team2Score,
-                                                Forfeit = m.ForFeitId
+                                                Forfeit = m.ForFeitId == -1 ? "Both" : (m.ForFeitId != 0 ? $"Team No {m.ForFeitId}": ""),
+                                                Team1Id = t1.Id,
+                                                Team2Id = t2.Id
                                             }
                          ).OrderBy(x => x.Rink).ToList();
 
@@ -166,7 +169,7 @@
                 TeamMate viceskip2 = new TeamMate();
 
 
-                TeamMate skip1 = (from t in DB.Teams.Where(x => x.Id == item.Team1No)
+                TeamMate skip1 = (from t in DB.Teams.Where(x => x.Id == item.Team1Id)
                                   join p in DB.Players on t.Skip equals p.Id
                                   join m in DB.Memberships on p.MembershipId equals m.Id
                                   select new TeamMate
@@ -175,7 +178,7 @@
                                           WheelChair = m.Wheelchair
                                       }).ToList().First();
 
-                TeamMate skip2 = (from t in DB.Teams.Where(x => x.Id == item.Team2No)
+                TeamMate skip2 = (from t in DB.Teams.Where(x => x.Id == item.Team2Id)
                                   join p in DB.Players on t.Skip equals p.Id
                                   join m in DB.Memberships on p.MembershipId equals m.Id
                                   select new TeamMate
@@ -186,15 +189,15 @@
                 ).ToList().First();
 
 
-                item.Team1 = skip1.Name;
-                item.Team2 = skip2.Name;
+                item.Team1 = $"{item.Team1No}({skip1.Name})";
+                item.Team2 =  $"{item.Team2No}({skip2.Name})";
                 item.Team1Style = skip1.WheelChair ? "color:red;" : "";
                 item.Team2Style = skip2.WheelChair ? "color:red;" : "";
 
 
                 if (league.TeamSize < 3)
                 {
-                    lead1 = (from t in DB.Teams.Where(x => x.Id == item.Team1No)
+                    lead1 = (from t in DB.Teams.Where(x => x.Id == item.Team1Id)
                              join p in DB.Players on t.Lead equals p.Id
                              join m in DB.Memberships on p.MembershipId equals m.Id
                              select new TeamMate
@@ -203,7 +206,7 @@
                                      WheelChair = m.Wheelchair
                                  }).ToList().First();
 
-                    lead2 = (from t in DB.Teams.Where(x => x.Id == item.Team2No)
+                    lead2 = (from t in DB.Teams.Where(x => x.Id == item.Team2Id)
                              join p in DB.Players on t.Lead equals p.Id
                              join m in DB.Memberships on p.MembershipId equals m.Id
                              select new TeamMate
@@ -214,15 +217,15 @@
                     ).ToList().First();
 
 
-                    item.Team1 = $"{skip1.Name}, {lead1.Name}";
-                    item.Team2 = $"{skip2.Name}, {lead2.Name}";
+                    item.Team1 = $"{item.Team1No}({skip1.Name}, {lead1.Name})";
+                    item.Team2 = $"{item.Team2No}({skip2.Name}, {lead2.Name})";
                     item.Team1Style = skip1.WheelChair || lead1.WheelChair ? "color:red;" : "";
                     item.Team2Style = skip2.WheelChair || lead2.WheelChair ? "color:red;" : "";
                 }
 
                 if (league.TeamSize == 3)
                 {
-                    viceskip1 = (from t in DB.Teams.Where(x => x.Id == item.Team1No)
+                    viceskip1 = (from t in DB.Teams.Where(x => x.Id == item.Team1Id)
                                  join p in DB.Players on t.ViceSkip equals p.Id
                                  join m in DB.Memberships on p.MembershipId equals m.Id
                                  select new TeamMate
@@ -231,7 +234,7 @@
                                          WheelChair = m.Wheelchair
                                      }).ToList().First();
 
-                    viceskip2 = (from t in DB.Teams.Where(x => x.Id == item.Team2No)
+                    viceskip2 = (from t in DB.Teams.Where(x => x.Id == item.Team2Id)
                                  join p in DB.Players on t.ViceSkip equals p.Id
                                  join m in DB.Memberships on p.MembershipId equals m.Id
                                  select new TeamMate
@@ -242,8 +245,8 @@
                     ).ToList().First();
 
 
-                    item.Team1 = $"{skip1.Name}, {viceskip1.Name}, {lead1.Name}";
-                    item.Team2 = $"{skip2.Name}, {viceskip2.Name}, {lead2.Name}";
+                    item.Team1 = $"{item.Team1No}({skip1.Name}, {viceskip1.Name}, {lead1.Name})";
+                    item.Team2 = $"{item.Team2No}({skip2.Name}, {viceskip2.Name}, {lead2.Name})";
                     item.Team1Style = skip1.WheelChair || lead1.WheelChair || viceskip1.WheelChair ? "color:red;" : "";
                     item.Team2Style = skip2.WheelChair || lead2.WheelChair || viceskip2.WheelChair ? "color:red;" : "";
                 }
@@ -291,14 +294,16 @@
         public int Id { get; set; }
         public int Rink { get; set; }
         public string? Team1 { get; set; }
+        public int Team1Id { get; set; }
         public string? Team1Style { get; set; }
         public int Team1Score { get; set; }
         public int Team1No { get; set; }
         public string? Team2 { get; set; }
         public int Team2Score { get; set; }
         public int Team2No { get; set; }
+        public int Team2Id { get; set; }
         public string? Team2Style { get; set; }
-        public int? Forfeit { get; set; }
+        public string? Forfeit { get; set; }
     }
 
     private class Weeks
