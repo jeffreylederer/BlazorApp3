@@ -3,7 +3,6 @@
 @using BlazerApp3.Models.DTOs
 @using BlazerApp3.Services
 @using BlazorApp3.Model
-@using System.Text
 @using Microsoft.AspNetCore.Components.Authorization
 
 @inject BlazorApp3.Model.TournamentContext DB
@@ -12,9 +11,12 @@
 
 <PageTitle>Create</PageTitle>
 
-<AuthorizeView Roles ="Scorer,Observer,Admin">
-    NavigationManager.NavigateTo("/");
-</AuthorizeView>
+<CascadingAuthenticationState>
+    <AuthorizeView Roles="SiteAdmin" Context="a">
+        <NotAuthorized>
+            <p>Not authorized to view this page<br /></p>
+        </NotAuthorized>
+        <Authorized>
 
 
 <h1>Create</h1>
@@ -50,8 +52,13 @@
             </div>
             <div class="form-group">
                 <label>Role</label>
-                <select @bind="@UserRegisterModel.Role" class="form-control" id="Role">
-                    @options
+                <select id="role" @bind="@UserRegisterModel.Role" class="form-control">
+                    @{
+                        foreach (var item in DB.Roles.ToList())
+                        {
+                            <option value="@item.Id">@item.Name</option>
+                        }
+                    }
                 </select>
                
              </div>  
@@ -67,15 +74,14 @@
 <div>
     <a href="/users">Back to List</a>
 </div>
+  </Authorized>
+</AuthorizeView>
+</CascadingAuthenticationState>
 
 @code {
 
     [SupplyParameterFromForm]
     private UserRegisterDTO UserRegisterModel { get; set; } = new();
-
-    MarkupString options;
-
-    private List<Role>? roles;
 
     // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
     public async Task CreateUser()
@@ -84,14 +90,6 @@
         NavigationManager.NavigateTo("/users");
     }
 
-    protected override void OnInitialized()
-    {;
-        StringBuilder optstr = new StringBuilder();
-        foreach(Role role in DB.Roles.ToList())
-        {
-            optstr.AppendLine($"<option value='{role.Id}'>{role.Name}</option>");
-        }
-        options = new MarkupString(optstr.ToString());
-    }
+   
 
  }

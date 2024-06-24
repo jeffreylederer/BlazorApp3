@@ -8,10 +8,11 @@
 
 <PageTitle>Index</PageTitle>
 
-<AuthorizeView Roles ="Scorer,Observer,Admin">
-    NavigationManager.NavigateTo("/");
-</AuthorizeView>
-
+<AuthorizeView Roles="SiteAdmin">
+      <NotAuthorized>
+         <p>Not authorized to view this page<br /></p>   
+      </NotAuthorized>
+      <Authorized>
 
 <h1>Index</h1>
 
@@ -30,6 +31,9 @@
         <a href="@($"users/delete?id={user.Id}")">Delete</a>
     </TemplateColumn>
 </QuickGrid>
+
+    </Authorized>
+</AuthorizeView>
 
 @code {
     IQueryable<UserDTOIndex> displayUsers;

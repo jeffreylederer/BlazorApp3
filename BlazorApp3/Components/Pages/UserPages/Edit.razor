@@ -10,10 +10,11 @@
 
 <PageTitle>Edit</PageTitle>
  <CascadingAuthenticationState>
-    <AuthorizeView Roles ="Scorer,Observer,Admin">
-        NavigationManager.NavigateTo("/");
-    </AuthorizeView>
- </CascadingAuthenticationState>
+<AuthorizeView Roles="SiteAdmin" Context="a">
+      <NotAuthorized>
+         <p>Not authorized to view this page<br /></p>   
+      </NotAuthorized>
+      <Authorized>
 
 <h1>Edit</h1>
 
@@ -29,7 +30,7 @@
     {
         <div class="row">
             <div class="col-md-4">
-                <EditForm method="post" Model="User" OnValidSubmit="UpdateUser" FormName="edit" Enhance>
+                <EditForm method="post" Model="User" OnValidSubmit="UpdateUser" FormName="edit" Enhance Context="b">
                     <DataAnnotationsValidator />
                     <ValidationSummary />
                     <div class="mb-3">
@@ -71,6 +72,9 @@
         </div>
     }
 }
+    </Authorized>
+</AuthorizeView>
+</CascadingAuthenticationState>
 
 @code {
     [SupplyParameterFromQuery]

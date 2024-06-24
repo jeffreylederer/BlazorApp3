@@ -7,9 +7,11 @@
 
 <PageTitle>Details</PageTitle>
 
-<AuthorizeView Roles ="Scorer,Observer,Admin">
-    NavigationManager.NavigateTo("/");
-</AuthorizeView>
+<AuthorizeView Roles="SiteAdmin">
+      <NotAuthorized>
+         <p>Not authorized to view this page<br /></p>   
+      </NotAuthorized>
+      <Authorized>
 
 <h1>Details</h1>
 
@@ -38,6 +40,8 @@
         </div>
     }
 </div>
+    </Authorized>
+</AuthorizeView>
 
 @code {
     User? user;
