@@ -1,10 +1,17 @@
 ﻿@page "/users"
+@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.QuickGrid
 @inject BlazorApp3.Model.TournamentContext DB
 @using BlazorApp3.Model
 @using System.ComponentModel.DataAnnotations
+@inject NavigationManager NavigationManager
 
 <PageTitle>Index</PageTitle>
+
+<AuthorizeView Roles ="Scorer,Observer,Admin">
+    NavigationManager.NavigateTo("/");
+</AuthorizeView>
+
 
 <h1>Index</h1>
 

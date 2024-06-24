@@ -2,9 +2,14 @@
 @inject BlazorApp3.Model.TournamentContext DB
 @using BlazorApp3.Model
 @inject NavigationManager NavigationManager
+@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.EntityFrameworkCore
 
 <PageTitle>Details</PageTitle>
+
+<AuthorizeView Roles ="Scorer,Observer,Admin">
+    NavigationManager.NavigateTo("/");
+</AuthorizeView>
 
 <h1>Details</h1>
 

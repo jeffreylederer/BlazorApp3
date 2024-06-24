@@ -2,59 +2,75 @@
 @inject BlazorApp3.Model.TournamentContext DB
 @using BlazorApp3.Model
 @inject NavigationManager NavigationManager
+@using BlazorApp3.Models.DTOs
+@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.EntityFrameworkCore
-@using System.ComponentModel.DataAnnotations
+
+@rendermode InteractiveServer
 
 <PageTitle>Edit</PageTitle>
+ <CascadingAuthenticationState>
+    <AuthorizeView Roles ="Scorer,Observer,Admin">
+        NavigationManager.NavigateTo("/");
+    </AuthorizeView>
+ </CascadingAuthenticationState>
 
 <h1>Edit</h1>
 
 <h4>User</h4>
 <hr />
 
-    
-<div class="row">
-    <div class="col-md-4">
-        <EditForm method="post" Model="User" OnValidSubmit="UpdateUser" FormName="edit" Enhance>
-            <DataAnnotationsValidator />
-            <ValidationSummary />
-            <div class="mb-3">
-                <label for="username" class="form-label">Username:</label>
-                <span>@User.Username</span>
+@{
+    if (currentUser == null)
+    {
+     <p> Loading...</p>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-4">
+                <EditForm method="post" Model="User" OnValidSubmit="UpdateUser" FormName="edit" Enhance>
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username:</label>
+                        <span>@User.Username</span>
                         
+                    </div>
+                    <div class="mb-3">
+                        <label for="displayname" class="form-label">DisplayName:</label>
+                        <InputText id="displayname" @bind-Value="User.DisplayName" class="form-control" />
+                        <ValidationMessage For="() => User.DisplayName" class="text-danger" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="isactive" class="form-label">IsActive:</label>
+                        <InputCheckbox id="isactive" @bind-Value="User.IsActive" class="form-check-input" />
+                        <ValidationMessage For="() => User.IsActive" class="text-danger" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="Role" class="form-label">Role:</label>
+                        <select id="role" @bind="@User.Role" class="form-control">
+                        @{
+                                foreach (var item in roles)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            }
+                        </select>
+                        <ValidationMessage For="() => User.Role" class="text-danger" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </EditForm>
             </div>
-            <div class="mb-3">
-                <label for="displayname" class="form-label">DisplayName:</label>
-                <InputText id="displayname" @bind-Value="User.DisplayName" class="form-control" />
-                <ValidationMessage For="() => User.DisplayName" class="text-danger" />
-            </div>
-            <div class="mb-3">
-                <label for="isactive" class="form-label">IsActive:</label>
-                <InputCheckbox id="isactive" @bind-Value="User.IsActive" class="form-check-input" />
-                <ValidationMessage For="() => User.IsActive" class="text-danger" />
-            </div>
-            <div class="mb-3">
-                <label for="Role" class="form-label">Role:</label>
-                <select id="role" @bind-="@User.Role">
-                @{
-                        foreach (var item in roles)
-                        {
-                            <option value="@item.Id">@item.Name</option>
-                        }
-                    }
-                </select>
-                <ValidationMessage For="() => User.Role" class="text-danger" />
-            </div>
-            <button type="submit" class="btn btn-primary">Save</button>
-        </EditForm>
-    </div>
-</div>
+        </div>
 
 
 
-<div>
-    <a href="/users">Back to List</a>
-</div>
+        <div>
+            <a href="/users">Back to List</a>
+        </div>
+    }
+}
 
 @code {
     [SupplyParameterFromQuery]
@@ -63,28 +79,38 @@
     [SupplyParameterFromForm]
     public UserDTOEdit? User { get; set; } = new UserDTOEdit();
 
-    private List<Role> roles = new List<Role>();
-    protected override async Task OnInitializedAsync()
+    User? currentUser;
+    UserRole roleitem;
+
+    int roleid;
+
+    private List<Role>? roles = null;
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        User? currentUser = await DB.Users.FirstOrDefaultAsync(m => m.Id == Id);
-        if (currentUser is null)
+        if (firstRender)
         {
-            NavigationManager.NavigateTo("notfound");
-        }
-        User = new UserDTOEdit()
+            User = await (from u in DB.Users.Where(m => m.Id == Id)
+                          join ur in DB.UserRoles on u.Id equals ur.UserId
+                          join r in DB.Roles on ur.RoleId equals r.Id
+                          select new UserDTOEdit
+                              {
+                                  Username = u.Username,
+                                  Role = r.Id,
+                                  DisplayName = u.DisplayName,
+                                  IsActive = u.IsActive,
+                                  RoleName = r.Name
+                              }).FirstOrDefaultAsync();
+            if (User is null)
             {
-                DisplayName = currentUser.DisplayName,
-                IsActive = currentUser.IsActive,
-                Username = currentUser.Username
-            };
-        var roleitem = await DB.UserRoles.Where(x => x.UserId == Id).FirstAsync();
-        if (roleitem is null)
-        {
-            NavigationManager.NavigateTo("notfound");
+                NavigationManager.NavigateTo("notfound");
+            }
+            roles = DB.Roles.ToList();
+            currentUser = await DB.Users.FirstOrDefaultAsync(m => m.Id == Id);
+            roleid = User.Role;
+            StateHasChanged();
         }
-        User.Role = roleitem.RoleId;
-        roles = DB.Roles.ToList();
-        //StateHasChanged();
     }
 
 
@@ -92,13 +118,13 @@
     // For more details, see https://aka.ms/RazorPagesCRUD.
     public async Task UpdateUser()
     {
-        User? currentUser  = await DB.Users.FirstOrDefaultAsync(m => m.Id == Id);
+
         currentUser.DisplayName = User.DisplayName;
         currentUser.Username = User.Username;
         currentUser.IsActive = User.IsActive;
         DB.Attach(currentUser!).State = EntityState.Modified;
-        UserRole? roleitem = await DB.UserRoles.Where(x => x.UserId == Id).FirstAsync();
-        DB.Attach(roleitem).State = EntityState.Modified;
+
+
 
         try
         {
@@ -106,7 +132,48 @@
         }
         catch (DbUpdateConcurrencyException)
         {
-            if (!UserExists(currentUser!.Id))
+            if (!UserExists(currentUser!.Id) )
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+        roleitem = await DB.UserRoles.Where(x => x.RoleId == User.Role && x.UserId == Id).FirstAsync();
+        DB.UserRoles.Remove(roleitem);
+        try
+        {
+            await DB.SaveChangesAsync();
+        }
+
+        catch (DbUpdateConcurrencyException)
+        {
+            if (RoleExists(roleitem.UserId!, roleitem.RoleId!))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        roleitem = new UserRole()
+        {
+            UserId=currentUser.Id,
+            RoleId = User.Role
+        };
+
+        DB.UserRoles.Add(roleitem);
+        try
+        {
+            await DB.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!RoleExists(roleitem.UserId!, roleitem.RoleId!))
             {
                 NavigationManager.NavigateTo("notfound");
             }
@@ -124,18 +191,8 @@
         return DB.Users.Any(e => e.Id == id);
     }
 
-    public class UserDTOEdit
+    bool RoleExists(int userid, int roleid)
     {
-        [Display(Name = "Username")]
-        public string? Username { get; set; }
-        
-        [Display(Name = "Is Active")]
-        public bool IsActive { get; set; }
-
-        [Display(Name = "Display Name")]
-        public string DisplayName { get; set; }
-
-        [Display(Name = "Role")]
-        public int Role { get; set; }
+        return DB.UserRoles.Any(e => e.UserId == userid && e.RoleId == roleid);
     }
 }

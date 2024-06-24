@@ -2,9 +2,16 @@
 @inject BlazorApp3.Model.TournamentContext DB
 @using BlazorApp3.Model
 @inject NavigationManager NavigationManager
+@using BlazorApp3.Models.DTOs
+@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.EntityFrameworkCore
 
 <PageTitle>Delete</PageTitle>
+
+<AuthorizeView Roles ="Scorer,Observer,Admin">
+    NavigationManager.NavigateTo("/");
+</AuthorizeView>
+
 
 <h1>Delete</h1>
 
@@ -12,66 +19,73 @@
 <div>
     <h4>User</h4>
     <hr />
-    @if (user is null)
+    @if (UserDB is null)
     {
         <p><em>Loading...</em></p>
     }
     else {
         <dl class="row">
             <dt class="col-sm-2">Username</dt>
-            <dd class="col-sm-10">@user.Username</dd>
+            <dd class="col-sm-10">@User.Username</dd>
         </dl>
        
         <dl class="row">
             <dt class="col-sm-2">DisplayName</dt>
-            <dd class="col-sm-10">@user.DisplayName</dd>
+            <dd class="col-sm-10">@User.DisplayName</dd>
         </dl>
         <dl class="row">
             <dt class="col-sm-2">IsActive</dt>
-            <dd class="col-sm-10">@user.IsActive</dd>
+            <dd class="col-sm-10">@User.IsActive</dd>
         </dl>
 
         <dl class="row">
             <dt class="col-sm-2">Role</dt>
-            <dd class="col-sm-10">@role.Name</dd>
+            <dd class="col-sm-10">@User.RoleName</dd>
         </dl>
 
-        <EditForm method="post" Model="user" OnValidSubmit="DeleteUser" FormName="delete" Enhance>
-            <button type="submit" class="btn btn-danger" disabled="@(user is null)">Delete</button> |
+        <EditForm method="post" Model="UserDB" OnValidSubmit="DeleteUser" FormName="delete" Enhance>
+            <button type="submit" class="btn btn-danger" disabled="@(UserDB is null)">Delete</button> |
             <a href="/users">Back to List</a>
         </EditForm>
     }
 </div>
 
 @code {
-    User? user;
-    Role? role;
+    UserDTOEdit? User { get; set; } = new ();
 
     [SupplyParameterFromQuery]
     public int Id { get; set; }
 
+    [SupplyParameterFromForm]
+    public User? UserDB { get; set; } = new ();
+
     protected override async Task OnInitializedAsync()
     {
-        user = await DB.Users.FirstOrDefaultAsync(m => m.Id == Id);
+        User = await (from u in DB.Users.Where(m => m.Id == Id)
+                      join ur in DB.UserRoles on u.Id equals ur.UserId
+                      join r in DB.Roles on ur.RoleId equals r.Id
+                      select new UserDTOEdit
+                          {
+                              Username = u.Username,
+                              Role = r.Id,
+                              DisplayName = u.DisplayName,
+                              IsActive = u.IsActive,
+                              RoleName = r.Name
+                          }).FirstOrDefaultAsync();
 
-        if (user is null)
+
+        if (User is null)
         {
             NavigationManager.NavigateTo("notfound");
         }
 
-        role = (from ur in DB.UserRoles.Where(x => x.UserId == user.Id)
-                join ro in DB.Roles on ur.RoleId equals ro.Id
-                select new Role { Id = ro.Id, Name = ro.Name }).First();
+        User? UserDB = await DB.Users.FirstOrDefaultAsync(x => x.Id == Id);
 
-        if (role is null)
-        {
-            NavigationManager.NavigateTo("notfound");
-        }
     }
 
     public async Task DeleteUser()
     {
-        DB.Users.Remove(user!);
+        DB.Users.Remove(UserDB!);
         await DB.SaveChangesAsync();
         NavigationManager.NavigateTo("/users");
     }

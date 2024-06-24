@@ -4,12 +4,18 @@
 @using BlazerApp3.Services
 @using BlazorApp3.Model
 @using System.Text
+@using Microsoft.AspNetCore.Components.Authorization
 
 @inject BlazorApp3.Model.TournamentContext DB
 @inject NavigationManager NavigationManager
 @inject IUsersService usersService
 
 <PageTitle>Create</PageTitle>
+
+<AuthorizeView Roles ="Scorer,Observer,Admin">
+    NavigationManager.NavigateTo("/");
+</AuthorizeView>
+
 
 <h1>Create</h1>
 
