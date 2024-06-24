@@ -128,7 +128,7 @@
         thisweekid = weekid;
 
         StringBuilder optionsList = new StringBuilder();
-        foreach (var item in DB.Schedules.Where(x => x.Leagueid == league.Id).ToList())
+        foreach (var item in DB.Schedules.Where(x => x.Leagueid == league.Id).OrderBy(x=>x.GameDate).ToList())
         {
             if (item.Id == thisweekid)
                 optionsList.AppendLine($"<option value='{@item.Id}' selected>{@item.GameDate.ToShortDateString()}</option>");
