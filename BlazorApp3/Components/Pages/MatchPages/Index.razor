@@ -37,11 +37,11 @@
         {
            <QuickGrid Class="table table-striped table-condensed" Items="@QModel" >
                 <TemplateColumn Context="league">
+                    <CascadingAuthenticationState>
                     <AuthorizeView Roles ="Admin,SiteAdmin">
-                        <AuthorizeView>
-                            <a @onclick="(() => Moveup(league.Rink))"><img src="~/images/uparrow.png" /></a>
-                        </AuthorizeView>
+                            <a @onclick="(() => Moveup(league.Rink))"><img src="images/uparrow.png" /></a>
                     </AuthorizeView>
+                    </CascadingAuthenticationState>
                 </TemplateColumn>
                 <PropertyColumn Property="Model => Model.Rink" Title="Rink"/>
                 <PropertyColumn Property="Model => Model.Team1" Title="Team 1"/>
@@ -50,11 +50,11 @@
                 <PropertyColumn Property="Model => Model.Team2Score" Title="Team 2Score" />
                 <PropertyColumn Property="Model => Model.Forfeit" Title="Team Forfeiting" />
                 <TemplateColumn Context="league">
-                    <AuthorizeView Roles ="Admin,SiteAdmin">
-                        <AuthorizeView>
+                 <CascadingAuthenticationState>
+                    <AuthorizeView Roles ="Admin,SiteAdmin,Scorer">
                             <a href="@($"matches/scoring?id={league.Id}")">Scoring</a>
-                        </AuthorizeView>
                     </AuthorizeView>
+                    </CascadingAuthenticationState>
                 </TemplateColumn>
             </QuickGrid>
  
