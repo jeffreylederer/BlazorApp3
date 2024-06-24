@@ -35,7 +35,7 @@
             </div>
             <div class="mb-3">
                 <label for="Role" class="form-label">Role:</label>
-                <select id="Role" @bind="User.Role">
+                <select id="role" @bind-="@User.Role">
                 @{
                         foreach (var item in roles)
                         {

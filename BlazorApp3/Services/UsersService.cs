@@ -93,14 +93,15 @@ namespace BlazerApp3.Services
                 newUser.LastLoggedIn = null;
                 newUser.Password = _securityService.GetSha256Hash(userRegisterDto.Password);
                 newUser.SerialNumber = Guid.NewGuid().ToString("N");
+                newUser.IsActive = true;
                 var addedUser = await _dbContext.Users.AddAsync(newUser);
                 await _dbContext.SaveChangesAsync();
                 UserRole item = new UserRole()
                 {
-                    RoleId = 2,
+                    RoleId = userRegisterDto.Role,
                     UserId = newUser.Id
                 };
-                _dbContext.UserRoles.Add(item);
+                await _dbContext.UserRoles.AddAsync(item);
                 await _dbContext.SaveChangesAsync();
                 return _mapper.Map<UserRegisterDTO>(addedUser.Entity);
             }

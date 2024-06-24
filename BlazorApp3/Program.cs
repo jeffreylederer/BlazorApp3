@@ -86,13 +86,9 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
-app.UseAntiforgery();
-
-
-#region authentication
 
 app.UseAuthentication();
-#endregion
+app.UseAntiforgery();
 
 
 app.MapRazorComponents<App>()
