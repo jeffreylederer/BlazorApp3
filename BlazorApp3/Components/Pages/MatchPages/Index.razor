@@ -36,16 +36,23 @@
         if (!@playoff)
         {
            <QuickGrid Class="table table-striped table-condensed" Items="@QModel" >
-                <TemplateColumn Context="league">
+                <TemplateColumn Context="league" Title="Exchange Rink">
+                @if(league.Rink > 1)
+                {
                     <CascadingAuthenticationState>
                     <AuthorizeView Roles ="Admin,SiteAdmin">
                             <a @onclick="(() => Moveup(league.Rink))"><img src="images/uparrow.png" /></a>
                     </AuthorizeView>
                     </CascadingAuthenticationState>
+                }
                 </TemplateColumn>
                 <PropertyColumn Property="Model => Model.Rink" Title="Rink"/>
-                <PropertyColumn Property="Model => Model.Team1" Title="Team 1"/>
-                <PropertyColumn Property="Model => Model.Team2" Title="Team 2" />
+                <TemplateColumn Context="team1" Title="Team 1">
+                    <span style="@team1.Team1Style">@team1.Team1</span>
+                </TemplateColumn>
+                <TemplateColumn Context="team2" Title="Team 2">
+                    <span style="@team2.Team2Style">@team2.Team2</span>
+                </TemplateColumn>
                 <PropertyColumn Property="Model => Model.Team1Score" Title="Team 1 Score" />
                 <PropertyColumn Property="Model => Model.Team2Score" Title="Team 2Score" />
                 <PropertyColumn Property="Model => Model.Forfeit" Title="Team Forfeiting" />
