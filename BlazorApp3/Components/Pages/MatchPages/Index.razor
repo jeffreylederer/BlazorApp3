@@ -22,12 +22,11 @@
     {
 
         <h1>Matches</h1>
-        <EditForm method="post" Model="@schedule" OnValidSubmit="Change" FormName="create" Enhance>
-            <select id="id" @bind="@schedule.Id">
+        
+           <span>Game Date:</span> <select  @onchange="(e=>Change(e))">
                 @weeks
-            </select>
-            <button type="submit" class="btn btn-primary">Select Week</button>
-        </EditForm>
+           </select>
+           
 
         <p>
             <a href="matches/standingsreport?weekid=@thisweekid">This week's standings report</a><br />
@@ -259,9 +258,10 @@
         StateHasChanged();
     }
 
-    private void Change()
+    private void Change(ChangeEventArgs e)
     {
-        SetupWeek(schedule.Id);
+        int id = int.Parse(e.Value.ToString()); ;
+        SetupWeek(id);
     }
 
     private async Task  Moveup(int rink)
