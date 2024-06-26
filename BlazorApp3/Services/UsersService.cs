@@ -10,7 +10,7 @@ namespace BlazerApp3.Services
 {
     public class UsersService : IUsersService
     {
-        private readonly IUnitOfWork _uow;
+        //private readonly IUnitOfWork _uow;
         private readonly DbSet<User> _users;
         private readonly ISecurityService _securityService;
 
@@ -19,10 +19,10 @@ namespace BlazerApp3.Services
         private readonly IMapper _mapper;
         private readonly AutoMapper.IConfigurationProvider _mapperConfiguration;
 
-        public UsersService(IUnitOfWork uow, ISecurityService securityService, TournamentContext dbContext, IMapper mapper)
+        public UsersService(ISecurityService securityService, TournamentContext dbContext, IMapper mapper)
         {
-            _uow = uow;
-            _uow.CheckArgumentIsNull(nameof(_uow));
+            //_uow = uow;
+            //_uow.CheckArgumentIsNull(nameof(_uow));
 
             _users = dbContext.Set<User>();
 

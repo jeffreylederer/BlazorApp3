@@ -54,7 +54,7 @@
                 <label>Role</label>
                 <select id="role" @bind="@UserRegisterModel.Role" class="form-control">
                     @{
-                        foreach (var item in DB.Roles.ToList())
+                        foreach (var item in roles)
                         {
                             <option value="@item.Id">@item.Name</option>
                         }
@@ -83,9 +83,18 @@
     [SupplyParameterFromForm]
     private UserRegisterDTO UserRegisterModel { get; set; } = new();
 
+    List<Role>? roles;
+
+    protected override void OnInitialized()
+    {
+        roles = DB.Roles.ToList();
+    }
+
     // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
     public async Task CreateUser()
     {
+        if (UserRegisterModel.Role == 0)
+            UserRegisterModel.Role = 1;
         UserRegisterModel = await usersService.CreateUserAsync(UserRegisterModel);
         NavigationManager.NavigateTo("/users");
     }

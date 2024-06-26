@@ -13,7 +13,6 @@ public partial class League
 
     public int TeamSize { get; set; }
 
-   
     public bool TiesAllowed { get; set; }
 
     public bool PointsCount { get; set; }

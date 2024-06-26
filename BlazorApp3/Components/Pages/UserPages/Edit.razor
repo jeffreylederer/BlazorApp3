@@ -113,6 +113,7 @@
             roles = DB.Roles.ToList();
             currentUser = await DB.Users.FirstOrDefaultAsync(m => m.Id == Id);
             roleid = User.Role;
+            roleitem = await DB.UserRoles.Where(x => x.RoleId == User.Role && x.UserId == Id).FirstAsync();
             StateHasChanged();
         }
     }
@@ -122,21 +123,19 @@
     // For more details, see https://aka.ms/RazorPagesCRUD.
     public async Task UpdateUser()
     {
-
         currentUser.DisplayName = User.DisplayName;
         currentUser.Username = User.Username;
         currentUser.IsActive = User.IsActive;
         DB.Attach(currentUser!).State = EntityState.Modified;
-
-
-
+        roleitem.RoleId = User.Role;
+        DB.Attach(roleitem!).State = EntityState.Modified;
         try
         {
             await DB.SaveChangesAsync();
         }
-        catch (DbUpdateConcurrencyException)
+        catch (DbUpdateConcurrencyException ex)
         {
-            if (!UserExists(currentUser!.Id) )
+            if (!UserExists(currentUser!.Id) || !RoleExists(roleitem!.Id))
             {
                 NavigationManager.NavigateTo("notfound");
             }
@@ -145,47 +144,8 @@
                 throw;
             }
         }
-        roleitem = await DB.UserRoles.Where(x => x.RoleId == User.Role && x.UserId == Id).FirstAsync();
-        DB.UserRoles.Remove(roleitem);
-        try
-        {
-            await DB.SaveChangesAsync();
-        }
-
-        catch (DbUpdateConcurrencyException)
-        {
-            if (RoleExists(roleitem.UserId!, roleitem.RoleId!))
-            {
-                NavigationManager.NavigateTo("notfound");
-            }
-            else
-            {
-                throw;
-            }
-        }
-
-        roleitem = new UserRole()
-        {
-            UserId=currentUser.Id,
-            RoleId = User.Role
-        };
-
-        DB.UserRoles.Add(roleitem);
-        try
-        {
-            await DB.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!RoleExists(roleitem.UserId!, roleitem.RoleId!))
-            {
-                NavigationManager.NavigateTo("notfound");
-            }
-            else
-            {
-                throw;
-            }
-        }
+        
+       
 
         NavigationManager.NavigateTo("/users");
     }
@@ -195,8 +155,8 @@
         return DB.Users.Any(e => e.Id == id);
     }
 
-    bool RoleExists(int userid, int roleid)
+    bool RoleExists(int Id)
     {
-        return DB.UserRoles.Any(e => e.UserId == userid && e.RoleId == roleid);
+        return DB.UserRoles.Any(e => e.Id == Id);
     }
 }

@@ -7,65 +7,55 @@
 @using Microsoft.EntityFrameworkCore
 
 <PageTitle>Delete</PageTitle>
-<CascadingAuthenticationState>
-    <AuthorizeView Roles="SiteAdmin" Context="a">
-      <NotAuthorized>
-         <p>Not authorized to view this page<br /></p>   
-      </NotAuthorized>
-      <Authorized>
+
 
 <h1>Delete</h1>
 
 <h3>Are you sure you want to delete this?</h3>
-<div>
-    <h4>User</h4>
-    <hr />
-    @if (UserDB.Id == 0)
-    {
-        <p><em>Loading...</em></p>
-    }
-    else {
-        <dl class="row">
-            <dt class="col-sm-2">Username</dt>
-            <dd class="col-sm-10">@User.Username</dd>
-        </dl>
+    <div>
+        <h4>User</h4>
+    
+            <dl class="row">
+                <dt class="col-sm-2">Username</dt>
+                    <dd class="col-sm-10">@userview.Username</dd>
+            </dl>
        
-        <dl class="row">
-            <dt class="col-sm-2">DisplayName</dt>
-            <dd class="col-sm-10">@User.DisplayName</dd>
-        </dl>
-        <dl class="row">
-            <dt class="col-sm-2">IsActive</dt>
-            <dd class="col-sm-10">@User.IsActive</dd>
-        </dl>
+            <dl class="row">
+                <dt class="col-sm-2">DisplayName</dt>
+                    <dd class="col-sm-10">@userview.DisplayName</dd>
+            </dl>
+            <dl class="row">
+                <dt class="col-sm-2">IsActive</dt>
+                    <dd class="col-sm-10">@userview.IsActive</dd>
+            </dl>
 
-        <dl class="row">
-            <dt class="col-sm-2">Role</dt>
-            <dd class="col-sm-10">@User.RoleName</dd>
-        </dl>
+            <dl class="row">
+                <dt class="col-sm-2">Role</dt>
+                    <dd class="col-sm-10">@userview.RoleName</dd>
+            </dl>
 
-        <EditForm method="post" Model="UserDB" OnValidSubmit="DeleteUser" FormName="delete" Enhance Context="b">
-            <button type="submit" class="btn btn-danger" disabled="@(UserDB is null)">Delete</button> |
-            <a href="/users">Back to List</a>
-        </EditForm>
-    }
-</div>
-    </Authorized>
-</AuthorizeView>
-</CascadingAuthenticationState>
+    <EditForm method="post" Model="userview" OnValidSubmit="DeleteUser" FormName="delete" Enhance>
+        <button type="submit" class="btn btn-danger" disabled="@(userview is null)">Delete</button> |
+                    <a href="/users">Back to List</a>
+                </EditForm>
+
+        </div>
+   
 
 @code {
-    UserDTOEdit? User { get; set; } = new ();
+    UserDTOEdit? userview = new();
 
     [SupplyParameterFromQuery]
     public int Id { get; set; }
 
-    [SupplyParameterFromForm]
-    public User? UserDB { get; set; } = new ();
+    
+    public User? user;
 
     protected override async Task OnInitializedAsync()
     {
-        User = await (from u in DB.Users.Where(m => m.Id == Id)
+        user = await DB.Users.FirstOrDefaultAsync(x => x.Id == Id);
+
+        userview = await (from u in DB.Users.Where(m => m.Id == Id)
                       join ur in DB.UserRoles on u.Id equals ur.UserId
                       join r in DB.Roles on ur.RoleId equals r.Id
                       select new UserDTOEdit
@@ -78,18 +68,18 @@
                           }).FirstOrDefaultAsync();
 
 
-        if (User is null)
+        if (user is null)
         {
             NavigationManager.NavigateTo("notfound");
         }
 
-        User? UserDB = await DB.Users.FirstOrDefaultAsync(x => x.Id == Id);
+       
 
     }
 
     public async Task DeleteUser()
     {
-        DB.Users.Remove(UserDB!);
+        DB.Users.Remove(user!);
         await DB.SaveChangesAsync();
         NavigationManager.NavigateTo("/users");
     }

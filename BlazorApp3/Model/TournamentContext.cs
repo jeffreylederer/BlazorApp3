@@ -36,11 +36,11 @@ public partial class TournamentContext : DbContext, IUnitOfWork
 
     public virtual DbSet<User> Users { get; set; }
 
-    public virtual DbSet<UserRole> UserRoles { get; set; }
-
     public virtual DbSet<UserLeague> UserLeagues { get; set; }
 
     public virtual DbSet<UserLeagueView> UserLeagueViews { get; set; }
+
+    public virtual DbSet<UserRole> UserRoles { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
@@ -95,7 +95,7 @@ public partial class TournamentContext : DbContext, IUnitOfWork
             entity.ToTable("Match");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            
+
             entity.HasOne(d => d.TeamNo1Navigation).WithMany(p => p.MatchTeamNo1Navigations)
                 .HasForeignKey(d => d.TeamNo1)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -132,27 +132,10 @@ public partial class TournamentContext : DbContext, IUnitOfWork
                 .HasMaxLength(50)
                 .IsUnicode(false)
                 .HasComputedColumnSql("(case when isnull([shortname],'')='' then [firstname] else [shortname] end)", false);
-                 entity.Property(e => e.Shortname)
+            entity.Property(e => e.Shortname)
                 .HasMaxLength(25)
                 .IsUnicode(false)
                 .HasColumnName("shortname");
-        });
-
-        modelBuilder.Entity<UserRole>(entity =>
-        {
-            entity.HasKey(e => new { e.RoleId, e.UserId }).HasName("PK_UserRole");
-
-            entity.ToTable("UserRole");
-
-            entity.HasOne(d => d.Role).WithMany(p => p.RolesNavigator)
-                .HasForeignKey(d => d.RoleId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_UserRole_UserRole");
-
-            entity.HasOne(d => d.User).WithMany(p => p.UsersNavigator)
-               .HasForeignKey(d => d.UserId)
-               .OnDelete(DeleteBehavior.ClientSetNull)
-               .HasConstraintName("FK_UserRole_Role");
         });
 
         modelBuilder.Entity<Player>(entity =>
@@ -164,7 +147,7 @@ public partial class TournamentContext : DbContext, IUnitOfWork
             entity.HasIndex(e => new { e.MembershipId, e.Leagueid }, "IX_Player").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("id");
-            
+
             entity.HasOne(d => d.League).WithMany(p => p.Players)
                 .HasForeignKey(d => d.Leagueid)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -192,7 +175,6 @@ public partial class TournamentContext : DbContext, IUnitOfWork
             entity.Property(e => e.Green)
                 .HasMaxLength(25)
                 .IsUnicode(false);
-            
         });
 
         modelBuilder.Entity<Role>(entity =>
@@ -216,7 +198,7 @@ public partial class TournamentContext : DbContext, IUnitOfWork
             entity.HasIndex(e => new { e.Leagueid, e.GameDate }, "IX_Schedule_1").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("id");
-           
+
             entity.HasOne(d => d.League).WithMany(p => p.Schedules)
                 .HasForeignKey(d => d.Leagueid)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -231,7 +213,7 @@ public partial class TournamentContext : DbContext, IUnitOfWork
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.DivisionId).HasDefaultValue((short)1);
-            
+
             entity.HasOne(d => d.LeadNavigation).WithMany(p => p.TeamLeadNavigations)
                 .HasForeignKey(d => d.Lead)
                 .HasConstraintName("FK__Players2");
@@ -286,23 +268,6 @@ public partial class TournamentContext : DbContext, IUnitOfWork
             entity.Property(e => e.Username)
                 .HasMaxLength(450)
                 .IsUnicode(false);
-
-            //entity.HasMany(d => d.Roles).WithMany(p => p.Users)
-            //    .UsingEntity<Dictionary<string, object>>(
-            //        "UserRole",
-            //        r => r.HasOne<Role>().WithMany()
-            //            .HasForeignKey("RoleId")
-            //            .OnDelete(DeleteBehavior.ClientSetNull)
-            //            .HasConstraintName("FK_UserRole_Role"),
-            //        l => l.HasOne<User>().WithMany()
-            //            .HasForeignKey("UserId")
-            //            .OnDelete(DeleteBehavior.ClientSetNull)
-            //            .HasConstraintName("FK_UserRole_UserRole"),
-            //        j =>
-            //        {
-            //            j.HasKey("UserId", "RoleId");
-            //            j.ToTable("UserRole");
-            //        });
         });
 
         modelBuilder.Entity<UserLeague>(entity =>
@@ -315,7 +280,7 @@ public partial class TournamentContext : DbContext, IUnitOfWork
             entity.Property(e => e.Roles)
                 .HasMaxLength(50)
                 .IsUnicode(false);
-           
+
             entity.HasOne(d => d.League).WithMany(p => p.UserLeagues)
                 .HasForeignKey(d => d.LeagueId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -350,6 +315,26 @@ public partial class TournamentContext : DbContext, IUnitOfWork
                 .HasMaxLength(200)
                 .IsUnicode(false)
                 .HasColumnName("username");
+        });
+
+        modelBuilder.Entity<UserRole>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_");
+
+            entity.ToTable("UserRole");
+
+            entity.Property(e => e.Id)
+                .ValueGeneratedOnAdd()
+                .HasColumnName("id");
+
+            entity.HasOne(d => d.Role).WithMany(p => p.UserRoles)
+                .HasForeignKey(d => d.RoleId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_UserRole_Role");
+
+            entity.HasOne(d => d.User).WithMany(p => p.UserRoles)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("FK_UserRole_UserRole");
         });
 
         OnModelCreatingPartial(modelBuilder);
