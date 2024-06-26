@@ -13,7 +13,5 @@ public partial class RinkOrder
 
     public string Boundary { get; set; } = null!;
 
-    public byte[] Rowversion { get; set; } = null!;
-
     public virtual ICollection<League> Leagues { get; set; } = new List<League>();
 }

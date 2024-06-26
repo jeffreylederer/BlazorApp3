@@ -78,10 +78,6 @@ public partial class TournamentContext : DbContext, IUnitOfWork
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.PointsLimit).HasDefaultValue(true);
-            entity.Property(e => e.Rowversion)
-                .IsRowVersion()
-                .IsConcurrencyToken()
-                .HasColumnName("rowversion");
             entity.Property(e => e.StartWeek).HasDefaultValue(1);
             entity.Property(e => e.TiePoints).HasDefaultValue((short)1);
             entity.Property(e => e.WinPoints).HasDefaultValue((short)1);
@@ -99,11 +95,7 @@ public partial class TournamentContext : DbContext, IUnitOfWork
             entity.ToTable("Match");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Rowversion)
-                .IsRowVersion()
-                .IsConcurrencyToken()
-                .HasColumnName("rowversion");
-
+            
             entity.HasOne(d => d.TeamNo1Navigation).WithMany(p => p.MatchTeamNo1Navigations)
                 .HasForeignKey(d => d.TeamNo1)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -140,11 +132,7 @@ public partial class TournamentContext : DbContext, IUnitOfWork
                 .HasMaxLength(50)
                 .IsUnicode(false)
                 .HasComputedColumnSql("(case when isnull([shortname],'')='' then [firstname] else [shortname] end)", false);
-            entity.Property(e => e.Rowversion)
-                .IsRowVersion()
-                .IsConcurrencyToken()
-                .HasColumnName("rowversion");
-            entity.Property(e => e.Shortname)
+                 entity.Property(e => e.Shortname)
                 .HasMaxLength(25)
                 .IsUnicode(false)
                 .HasColumnName("shortname");
@@ -176,11 +164,7 @@ public partial class TournamentContext : DbContext, IUnitOfWork
             entity.HasIndex(e => new { e.MembershipId, e.Leagueid }, "IX_Player").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Rowversion)
-                .IsRowVersion()
-                .IsConcurrencyToken()
-                .HasColumnName("rowversion");
-
+            
             entity.HasOne(d => d.League).WithMany(p => p.Players)
                 .HasForeignKey(d => d.Leagueid)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -208,10 +192,7 @@ public partial class TournamentContext : DbContext, IUnitOfWork
             entity.Property(e => e.Green)
                 .HasMaxLength(25)
                 .IsUnicode(false);
-            entity.Property(e => e.Rowversion)
-                .IsRowVersion()
-                .IsConcurrencyToken()
-                .HasColumnName("rowversion");
+            
         });
 
         modelBuilder.Entity<Role>(entity =>
@@ -235,15 +216,7 @@ public partial class TournamentContext : DbContext, IUnitOfWork
             entity.HasIndex(e => new { e.Leagueid, e.GameDate }, "IX_Schedule_1").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Rowversion)
-                .IsRowVersion()
-                .IsConcurrencyToken()
-                .HasColumnName("rowversion");
-            entity.Property(e => e.WeekDate)
-                .HasMaxLength(10)
-                .IsUnicode(false)
-                .HasComputedColumnSql("(CONVERT([varchar](10),[GameDate],(101)))", false);
-
+           
             entity.HasOne(d => d.League).WithMany(p => p.Schedules)
                 .HasForeignKey(d => d.Leagueid)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -258,11 +231,7 @@ public partial class TournamentContext : DbContext, IUnitOfWork
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.DivisionId).HasDefaultValue((short)1);
-            entity.Property(e => e.Rowversion)
-                .IsRowVersion()
-                .IsConcurrencyToken()
-                .HasColumnName("rowversion");
-
+            
             entity.HasOne(d => d.LeadNavigation).WithMany(p => p.TeamLeadNavigations)
                 .HasForeignKey(d => d.Lead)
                 .HasConstraintName("FK__Players2");
@@ -346,11 +315,7 @@ public partial class TournamentContext : DbContext, IUnitOfWork
             entity.Property(e => e.Roles)
                 .HasMaxLength(50)
                 .IsUnicode(false);
-            entity.Property(e => e.Rowversion)
-                .IsRowVersion()
-                .IsConcurrencyToken()
-                .HasColumnName("rowversion");
-
+           
             entity.HasOne(d => d.League).WithMany(p => p.UserLeagues)
                 .HasForeignKey(d => d.LeagueId)
                 .OnDelete(DeleteBehavior.ClientSetNull)

@@ -9,11 +9,9 @@
 @inject NavigationManager NavigationManager
 @using Microsoft.Data.SqlClient
 @using Microsoft.EntityFrameworkCore
-@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using System.Data.Entity.Validation
 @using System.Text
-@inject ProtectedSessionStorage ProtectedSessionStore
-@rendermode InteractiveServer
+
 
 <PageTitle>Delete</PageTitle>
 
@@ -64,26 +62,14 @@
 
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (player != null)
-        {
-            await ProtectedSessionStore.SetAsync("row", Convert.ToBase64String(player.Rowversion));
-        }
-    }
+    
 
     public async Task DeletePlayer()
     {
         try
         {
-            await Task.Delay(1000);
-            ProtectedBrowserStorageResult<string> result = await ProtectedSessionStore.GetAsync<string>("row");
-            if (result.Success)
-            {
-                player.Rowversion = Encoding.ASCII.GetBytes(result.Value);
-                DB.Players.Remove(player!);
-                await DB.SaveChangesAsync();
-            }
+            DB.Players.Remove(player!);
+            await DB.SaveChangesAsync();
         }
         catch (DbUpdateConcurrencyException)
         {

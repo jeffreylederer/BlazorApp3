@@ -19,8 +19,6 @@ public partial class Match
 
     public int Team2Score { get; set; }
 
-    public byte[] Rowversion { get; set; } = null!;
-
     public int ForFeitId { get; set; }
 
     public virtual Team TeamNo1Navigation { get; set; } = null!;

@@ -17,8 +17,6 @@ public partial class Team
 
     public int TeamNo { get; set; }
 
-    public byte[] Rowversion { get; set; } = null!;
-
     public short DivisionId { get; set; }
 
     public virtual Player? LeadNavigation { get; set; }

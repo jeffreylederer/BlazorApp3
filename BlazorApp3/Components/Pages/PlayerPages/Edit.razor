@@ -9,10 +9,7 @@
 @using BlazorApp3.Model
 @inject NavigationManager NavigationManager
 @using Microsoft.EntityFrameworkCore
-@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using System.Text
-@inject ProtectedSessionStorage ProtectedSessionStore
-@rendermode InteractiveServer
 
 
 <PageTitle>Edit</PageTitle>
@@ -85,26 +82,12 @@
         StateHasChanged();
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (Player != null)
-        {
-            await ProtectedSessionStore.SetAsync("row", Convert.ToBase64String(Player.Rowversion));
-        }
-        else
-        {
-            StateHasChanged();
-        }
-    }
-
+  
     // To protect from overposting attacks, enable the specific properties you want to bind to.
     // For more details, see https://aka.ms/RazorPagesCRUD.
     public async Task UpdatePlayer()
     {
-        await Task.Delay(1000);
-        var result = await ProtectedSessionStore.GetAsync<string>("row");
-        if (result.Success)
-            Player.Rowversion = Encoding.ASCII.GetBytes(result.Value);
+        
         DB.Attach(Player!).State = EntityState.Modified;
         try
         {

@@ -3,9 +3,6 @@
 @using BlazorApp3.Model
 @inject NavigationManager NavigationManager
 @using Microsoft.EntityFrameworkCore
-@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
-@inject ProtectedSessionStorage ProtectedSessionStore
-@rendermode InteractiveServer
 
 
 <PageTitle>Edit</PageTitle>
@@ -21,7 +18,7 @@ else
 {
     <div class="row">
         <div class="col-md-4">
-            <EditForm method="post" Model="Membership" OnValidSubmit="UpdateMembership" FormName="edit" Enhance>
+            <EditForm method="post" Model=" DB.Memberships.FirstOrDefaultAsync(m => m.Id == Id)" OnValidSubmit="UpdateMembership" FormName="edit" Enhance>
                 <DataAnnotationsValidator />
                 <ValidationSummary />
                 <input type="hidden" name="Membership.Id" value="@Membership.Id" />
@@ -63,27 +60,12 @@ else
     [SupplyParameterFromForm]
     public Membership? Membership { get; set; }
 
-    
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-
-            Membership ??= await DB.Memberships.FirstOrDefaultAsync(m => m.Id == Id);
-            await ProtectedSessionStore.SetAsync("row", Convert.ToBase64String(Membership.Rowversion));
-            StateHasChanged();
-            
-        }
-    }
+ 
 
     // To protect from overposting attacks, enable the specific properties you want to bind to.
     // For more details, see https://aka.ms/RazorPagesCRUD.
     public async Task UpdateMembership()
     {
-        await Task.Delay(1000);
-        var result = await ProtectedSessionStore.GetAsync<string>("row");
-        if (result.Success && result.Value != null)
-            Membership.Rowversion = Convert.FromBase64String(result.Value);
         DB.Attach(Membership!).State = EntityState.Modified;
 
         try

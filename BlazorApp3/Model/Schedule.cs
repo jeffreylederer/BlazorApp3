@@ -11,11 +11,7 @@ public partial class Schedule
 
     public int Leagueid { get; set; }
 
-    public byte[] Rowversion { get; set; } = null!;
-
     public bool Cancelled { get; set; }
-
-    public string? WeekDate { get; set; }
 
     public bool PlayOffs { get; set; }
 

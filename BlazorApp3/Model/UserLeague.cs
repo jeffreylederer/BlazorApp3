@@ -13,8 +13,6 @@ public partial class UserLeague
 
     public string? Roles { get; set; }
 
-    public byte[] Rowversion { get; set; } = null!;
-
     public virtual League League { get; set; } = null!;
 
     public virtual User User { get; set; } = null!;

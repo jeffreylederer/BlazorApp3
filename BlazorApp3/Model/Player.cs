@@ -11,8 +11,6 @@ public partial class Player
 
     public int MembershipId { get; set; }
 
-    public byte[] Rowversion { get; set; } = null!;
-
     public virtual League League { get; set; } = null!;
 
     public virtual Membership Membership { get; set; } = null!;

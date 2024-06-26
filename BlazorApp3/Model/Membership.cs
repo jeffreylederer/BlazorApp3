@@ -17,8 +17,6 @@ public partial class Membership
 
     public string? NickName { get; set; }
 
-    public byte[] Rowversion { get; set; } = null!;
-
     public bool Wheelchair { get; set; }
 
     public virtual ICollection<Player> Players { get; set; } = new List<Player>();

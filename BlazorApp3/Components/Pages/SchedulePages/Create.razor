@@ -19,7 +19,7 @@
         <EditForm method="post" Model="@Schedule" OnValidSubmit="AddSchedule" FormName="create" Enhance>
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" />
-            <div class="mb-3">
+             <div class="mb-3">
                 <label for="gamedate" class="form-label">GameDate:</label> 
                 <InputDate id="gamedate" @bind-Value="Schedule.GameDate" class="form-control" /> 
                 <ValidationMessage For="() => Schedule.GameDate" class="text-danger" /> 
@@ -47,7 +47,7 @@
 
 @code {
     [SupplyParameterFromForm]
-    public Schedule Schedule { get; set; } = new Schedule() { GameDate = DateOnly.FromDateTime(DateTime.Now) };
+    public SingleDate Schedule { get; set; } = new() { GameDate = DateOnly.FromDateTime(DateTime.Now) };
 
     [SupplyParameterFromQuery]
     public int leagueid { get; set; }
@@ -55,9 +55,24 @@
     // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
     public async Task AddSchedule()
     {
-        Schedule.Leagueid = leagueid;
-        DB.Schedules.Add(Schedule);
+        var schedule = new Schedule()
+            {
+                Leagueid = leagueid,
+                GameDate = Schedule.GameDate,
+                Cancelled = Schedule.Cancelled,
+                PlayOffs = Schedule.PlayOffs
+            };
+        DB.Schedules.Add(schedule);
         await DB.SaveChangesAsync();
         NavigationManager.NavigateTo("/schedules");
+    }
+
+    public class SingleDate
+    {
+        public DateOnly GameDate { get; set; }
+
+        public bool Cancelled { get; set; }
+
+        public bool PlayOffs { get; set; }
     }
 }

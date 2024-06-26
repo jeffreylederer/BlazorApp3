@@ -6,11 +6,8 @@
 @inject BlazorApp3.Model.TournamentContext DB
 @using BlazorApp3.Model
 @inject NavigationManager NavigationManager
-@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using Microsoft.EntityFrameworkCore
 @using System.Text
-@inject ProtectedSessionStorage ProtectedSessionStore
-@rendermode InteractiveServer
 
 <PageTitle>Edit</PageTitle>
 
@@ -74,21 +71,11 @@ else
         }
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (Schedule != null)
-        {
-            await ProtectedSessionStore.SetAsync("row", Convert.ToBase64String(Schedule.Rowversion));
-        }
-    }
-
+  
     // To protect from overposting attacks, enable the specific properties you want to bind to.
     // For more details, see https://aka.ms/RazorPagesCRUD.
     public async Task UpdateSchedule()
     {
-         var result = await ProtectedSessionStore.GetAsync<string>("row");
-        if (result.Success)
-            Schedule.Rowversion = Encoding.ASCII.GetBytes(result.Value);
         DB.Attach(Schedule!).State = EntityState.Modified;
 
         try

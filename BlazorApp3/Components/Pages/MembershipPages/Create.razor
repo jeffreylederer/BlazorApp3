@@ -52,14 +52,35 @@
 @code {
 
     [SupplyParameterFromForm]
-    public Membership Membership { get; set; } = new();
+    public NwwMember Membership { get; set; } = new();
 
     // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
     public async Task AddMembership()
     {
-        DB.Memberships.Add(Membership);
+        Membership member = new Membership()
+            {
+                FirstName = Membership.FirstName,
+                LastName = Membership.LastName,
+                Shortname = Membership.Shortname,
+                Wheelchair = Membership.Wheelchair
+    };
+        DB.Memberships.Add(member);
         await DB.SaveChangesAsync();
         NavigationManager.NavigateTo("/memberships");
+    }
+
+
+    public class NwwMember
+    {
+        public string FirstName { get; set; } = null!;
+
+        public string LastName { get; set; } = null!;
+
+        public string FullName { get; set; } = null!;
+
+        public string? Shortname { get; set; }
+
+        public bool Wheelchair { get; set; }
     }
 
    
