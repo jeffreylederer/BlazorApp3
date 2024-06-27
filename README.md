@@ -1,4 +1,4 @@
-This was my experiment to learn Blazer Web app. I had a number of goals. This application is a redo of an older application [Tournament](https://github/jeffreylederer/tournament) I created this older app in .Net 4.6 with MVC. This application is used by the Frick Park Lawn Bowling club to track season long leagues. The goal was not to fully duplicate the older app, but just enough to figuure out how to determine how to do the important functions of the older app.
+This was my experiment to learn Blazer Web app. I had a number of goals. This application is a redo of an older application [Tournament](https://github/jeffreylederer/tournament) I created this older app in .Net 4.6 with MVC. That application is used by the Frick Park Lawn Bowling club to track season long leagues. The goal was not to fully duplicate the older app, but just enough to figuure out how to determine how to do the important functions of the older app.
 
 ## Create a Blazer App ##
 This app was created using the Blazer Server template and selecting no authentication
@@ -44,7 +44,9 @@ I want to limit users to certain pages and certain functions on the pages a user
 ## PDF Documents ##
 I used QuestPDF to create a single PDF document. It is accessable from the Teams index page. I did not bother to create additional ones that are avialable to the older app.
 
-
+## Session Object ##
+.Net Core does not support the Session Object. This application had to store from page to page the current league id.  I used ProtectedSessionStore. On the Welcome page, I created a ProtectedSessionStore object and then in each table index page I retrieved that object.
+Since the object is stored using browser storage, you need to work with the object in a override of the OnAfterRenderAsync method and set the rendermode to InteractiveServer.
 
 
 
