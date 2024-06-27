@@ -29,7 +29,7 @@ This is one of the goals for writing this application: database authentication a
 between users and roles is stored in the table userrole in the database. Thought it would be easy to give users multiple roles, this application only needs to give each user just one role.
 
 ## Seed Database
-Since you need a SiteAdmin role to create additional users, I seeded the database with roles and a SiteAdmin, Password = password. You can create addtional Users with the User CRUD pages. This used the DBInitialize service to seed the database.
+Since you need a SiteAdmin role to create additional users, I seeded the database with roles and a SiteAdmin, Password = password. You can create addtional Users with the User CRUD pages. This used the DbInitializerService service to seed the database.
 
 ## Force users to login
 If you look in the file Routes.razer, you can see the construct that forces unauthorized users to only be able to see the Login page. The app does not let users self-register though that would be easy. I did not setup pages for the user to reset password since I already have that logic in the older MVC application.
