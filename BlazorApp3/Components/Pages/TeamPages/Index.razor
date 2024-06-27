@@ -25,7 +25,7 @@
             <a href="teams/teamsreport?leagueid=@leagueid" target="_blank">Teams Report</a><br />
         </p>
 
-        <QuickGrid Class="table" Items="DB.TeamsViews.Where(x=>x.Leagueid==leagueid).OrderBy(x=>x.TeamNo).OrderBy(x=>x.DivisionId)">
+        <QuickGrid Class="table table-striped table-condensed" Items="DB.TeamsViews.Where(x=>x.Leagueid==leagueid).OrderBy(x=>x.TeamNo).OrderBy(x=>x.DivisionId)">
             <PropertyColumn Property="team => team.Skip" />
             @{
                 if(@viceskip)

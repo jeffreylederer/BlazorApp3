@@ -1,4 +1,5 @@
 ﻿@page "/memberships"
+@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.QuickGrid
 @inject BlazorApp3.Model.TournamentContext DB
 @using BlazorApp3.Model
@@ -8,10 +9,11 @@
 <h1>Index</h1>
 
 <p>
-    <a href="memberships/create">Create New</a>
+   <AuthorizeView Roles="SiteAdmin,Admin">
+        <a href="memberships/create">Create New</a>
+    </AuthorizeView>
 </p>
-
-<QuickGrid Class="table" Items="DB.Memberships.OrderBy(x=>x.LastName)" >
+<QuickGrid Class="table table-striped table-condensed" Items="DB.Memberships.OrderBy(x=>x.LastName)">
     <PropertyColumn Property="membership => membership.FirstName" />
     <PropertyColumn Property="membership => membership.LastName" />
     <PropertyColumn Property="membership => membership.FullName" />
@@ -20,8 +22,10 @@
     <PropertyColumn Property="membership => membership.Wheelchair" />
 
     <TemplateColumn Context="membership">
-        <a href="@($"memberships/edit?id={membership.Id}")">Edit</a> |
-        <a href="@($"memberships/details?id={membership.Id}")">Details</a> |
-        <a href="@($"memberships/delete?id={membership.Id}")">Delete</a>
+        <AuthorizeView Roles="SiteAdmin,Admin">
+            <a href="@($"memberships/edit?id={membership.Id}")">Edit</a> |
+            <a href="@($"memberships/delete?id={membership.Id}")">Delete</a> |
+          </AuthorizeView>
+          <a href="@($"memberships/details?id={membership.Id}")">Details</a> 
     </TemplateColumn>
 </QuickGrid>

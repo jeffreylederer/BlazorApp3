@@ -23,7 +23,7 @@
             <a href="schedules/create?leagueid=@leagueid">Create New</a>
         </p>
         <h1>@league.LeagueName</h1>
-        <QuickGrid Class="table" Items="DB.Schedules.Where(x=>x.Leagueid == leagueid.Value).OrderBy(x=>x.GameDate)">
+        <QuickGrid Class="table table-striped table-condensed" Items="DB.Schedules.Where(x=>x.Leagueid == leagueid.Value).OrderBy(x=>x.GameDate)">
             <PropertyColumn Property="schedule => schedule.GameDate" Format="M/d/yyyy" Title="Game Date" />
             <PropertyColumn Property="schedule => schedule.Cancelled" />
             <PropertyColumn Property="schedule => schedule.GameDate.ToString(format)" Title="Week Date" />
