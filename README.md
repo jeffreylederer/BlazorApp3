@@ -1,4 +1,4 @@
-This was my experiment to learn Blazer Web app. I had a number of goals. This application is a redo of an older application [Tournament](https://github/jeffreylederer/tournament) I created this older app in .Net 4.6 with MVC. That application is used by the Frick Park Lawn Bowling club to track season long leagues. The goal was not to fully duplicate the older app, but just enough to figuure out how to determine how to do the important functions of the older app.
+This was my experiment to learn Blazer Web app. I had a number of goals. This application is a redo of an older application [Tournament](https://github/jeffreylederer/tournament) I created this older app in .Net 4.6 with MVC. That application is used by the Frick Park Lawn Bowling club to track season leagues. The goal was not to fully duplicate the older app, but just enough to figuure out how to determine how to do the important functions of the older app.
 
 ## Create a Blazer App ##
 This app was created using the Blazer Server template and selecting no authentication
