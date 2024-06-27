@@ -1,4 +1,6 @@
-This was my experiment to learn Blazer Web app. I had a number of goals. This application is a redo of an older application [Tournament](https://github/jeffreylederer/tournament) I created this older app in .Net 4.6 with MVC. That application is used by the Frick Park Lawn Bowling club to track season leagues. The goal was not to fully duplicate the older app, but just enough to figuure out how to determine how to do the important functions of the older app.
+This was my experiment to learn Blazer Web app. I had a number of goals. This application is a redo of an older application [Tournament](https://github/jeffreylederer/tournament). I created this older app in .Net 4.6 with MVC. That application is used by the Frick Park Lawn Bowling club to track season leagues. The goal was not to fully duplicate the older app, but just enough to figuure out how to determine how to do the important functions of the older app.
+
+This app was created with Visual Studio 2022, version 17.9.2.
 
 ## Create a Blazer App ##
 This app was created using the Blazer Server template and selecting no authentication
@@ -47,6 +49,13 @@ I used QuestPDF to create a single PDF document. It is accessable from the Teams
 ## Session Object ##
 .Net Core does not support the Session Object. This application had to store from page to page the current league id.  I used ProtectedSessionStore. On the Welcome page, I created a ProtectedSessionStore object and then in each table index page I retrieved that object.
 Since the object is stored using browser storage, you need to work with the object in a override of the OnAfterRenderAsync method and set the rendermode to InteractiveServer.
+
+## Misc ##
+There is still a bug in creating a new user. It ignores the role selection from the dropdown selection control.
+
+I learned that when you get a bug (not caught by try/catch, the error stack is displayed in the output window.
+
+There is a memory leak in VS. So every so often it is worth exiting and restarting VS when things start looking wierd.
 
 
 
