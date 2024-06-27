@@ -37,12 +37,16 @@
                     </div>
                     <div class="mb-3">
                         <label for="team1members" class="form-label">@team1members:</label>
-                        <InputNumber id="team1members" @bind-Value="TheScore.Team1Score" class="form-control" style="width:200px;"  />
+                        <fieldset disabled="@IsDisabled">
+                            <InputNumber id="team1members" @bind-Value="TheScore.Team1Score" class="form-control" style="width:200px;"  />
+                        </fieldset>
                         <ValidationMessage For="() => TheScore.Team1Score" class="text-danger" />
                     </div>
                     <div class="mb-3">
                         <label for="team2members" class="form-label">@team2members:</label>
-                        <InputNumber id="team2members" @bind-Value="TheScore.Team2Score" class="form-control" style="width:200px;" />
+                        <fieldset disabled="@IsDisabled">
+                            <InputNumber id="team2members" @bind-Value="TheScore.Team2Score" class="form-control" style="width:200px;" />
+                        </fieldset>
                         <ValidationMessage For="() => TheScore.Team2Score" class="text-danger" />
                     </div>
 
@@ -80,6 +84,8 @@
     private int weekid;
 
     private int rink;
+
+    private bool IsDisabled { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -164,6 +170,7 @@
             TheScore.Team1Score = match.Team2Score;
             TheScore.Team2Score = match.Team2Score;
             TheScore.TeamForfeit = match.ForFeitId;
+            IsDisabled = match.ForFeitId != 0;
             string selected;
 
             StringBuilder optionstr = new StringBuilder();
@@ -208,8 +215,11 @@
         {
             TheScore.Team2Score = 0;
             TheScore.Team1Score = 0;
-            StateHasChanged();
+            IsDisabled = true;
         }
+        else
+            IsDisabled = false;
+        StateHasChanged();
     }
 
     private class Scrore
