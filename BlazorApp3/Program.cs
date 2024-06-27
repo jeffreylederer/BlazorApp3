@@ -6,6 +6,8 @@ using Blazored.SessionStorage;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Builder;
+using BlazerApp3.Infralayer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +31,7 @@ builder.Services.AddScoped<ISecurityService, SecurityService>();
 builder.Services.AddScoped<ICookieValidatorService, CookieValidatorService>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
 builder.Services.AddScoped<IUserInfoService, UserInfoService>();
+builder.Services.AddScoped<IDbInitializerService, DbInitializerService>();
 builder.Services.AddHttpContextAccessor();
 // Needed for cookie auth.
 builder.Services
@@ -88,6 +91,13 @@ app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAntiforgery();
+
+var scopeFactory = app.Services.GetRequiredService<IServiceScopeFactory>();
+using (var scope = scopeFactory.CreateScope())
+{
+    var dbInitializer = scope.ServiceProvider.GetRequiredService<IDbInitializerService>();
+    dbInitializer.SeedData();
+}
 
 
 app.MapRazorComponents<App>()
