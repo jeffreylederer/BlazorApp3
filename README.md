@@ -53,7 +53,7 @@ Since the object is stored using browser storage, you need to work with the obje
 ## Misc ##
 There is still a bug in creating a new user. It ignores the role selection from the dropdown selection control.
 
-I learned that when you get a bug (not caught by try/catch, the error stack is displayed in the output window.
+I learned that when you get a bug (not caught by try/catch), the error stack is displayed in the output window.
 
 There is a memory leak in VS. So every so often it is worth exiting and restarting VS when things start looking wierd.
 
