@@ -1,9 +1,10 @@
-﻿using BlazerApp3.Services;
+﻿using System;
+using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlazorApp3.Model;
 
-public partial class TournamentContext : DbContext, IUnitOfWork
+public partial class TournamentContext : DbContext
 {
     public TournamentContext()
     {
@@ -19,6 +20,8 @@ public partial class TournamentContext : DbContext, IUnitOfWork
     public virtual DbSet<League> Leagues { get; set; }
 
     public virtual DbSet<Match> Matches { get; set; }
+
+    public virtual DbSet<MatchView> MatchViews { get; set; }
 
     public virtual DbSet<Membership> Memberships { get; set; }
 
@@ -109,6 +112,33 @@ public partial class TournamentContext : DbContext, IUnitOfWork
                 .HasForeignKey(d => d.WeekId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Match_Schedule");
+        });
+
+        modelBuilder.Entity<MatchView>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("MatchView");
+
+            entity.Property(e => e.Id).HasColumnName("ID");
+            entity.Property(e => e.Lead1)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.Lead2)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.Skip1)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.Skip2)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.Vice1)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.Vice2)
+                .HasMaxLength(50)
+                .IsUnicode(false);
         });
 
         modelBuilder.Entity<Membership>(entity =>
@@ -319,7 +349,7 @@ public partial class TournamentContext : DbContext, IUnitOfWork
 
         modelBuilder.Entity<UserRole>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK_");
+            entity.HasKey(e => new { e.UserId, e.RoleId });
 
             entity.ToTable("UserRole");
 

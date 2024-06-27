@@ -35,30 +35,30 @@
         if (!@playoff)
         {
            <QuickGrid Class="table table-striped table-condensed" Items="@QModel" >
-                <TemplateColumn Context="league" Title="Exchange Rink">
+                <TemplateColumn Context="league" Title="Exchange Rink" >
                 @if(league.Rink > 1)
                 {
                     <CascadingAuthenticationState>
                     <AuthorizeView Roles ="Admin,SiteAdmin">
-                            <a @onclick="(() => Moveup(league.Rink))"><img src="images/uparrow.png" /></a>
+                            <a @onclick="(() => Moveup(league.Rink))" ><img src="images/uparrow.png" /></a>
                     </AuthorizeView>
                     </CascadingAuthenticationState>
                 }
                 </TemplateColumn>
-                <PropertyColumn Property="Model => Model.Rink" Title="Rink"/>
+                <PropertyColumn Property="Model => Model.Rink" Title="Rink" Align="Align.Center" />
                 <TemplateColumn Context="team1" Title="Team 1">
-                    <span style="@team1.Team1Style">@team1.Team1</span>
+                    <span style="@team1.Team1Style">@team1.Team1Players</span>
                 </TemplateColumn>
                 <TemplateColumn Context="team2" Title="Team 2">
-                    <span style="@team2.Team2Style">@team2.Team2</span>
+                    <span style="@team2.Team2Style">@team2.Team2Players</span>
                 </TemplateColumn>
-                <PropertyColumn Property="Model => Model.Team1Score" Title="Team 1 Score" />
-                <PropertyColumn Property="Model => Model.Team2Score" Title="Team 2Score" />
+                <PropertyColumn Property="Model => Model.Team1Score" Title="Team 1 Score" Align="Align.Center" />
+                <PropertyColumn Property="Model => Model.Team2Score" Title="Team 2 Score" Align="Align.Center" />
                 <PropertyColumn Property="Model => Model.Forfeit" Title="Team Forfeiting" />
-                <TemplateColumn Context="league">
+                <TemplateColumn Context="match">
                  <CascadingAuthenticationState>
                     <AuthorizeView Roles ="Admin,SiteAdmin,Scorer">
-                            <a href="@($"matches/scoring?id={league.Id}")">Scoring</a>
+                            <a href="@($"matches/scoring?id={match.Id}")">Scoring</a>
                     </AuthorizeView>
                     </CascadingAuthenticationState>
                 </TemplateColumn>
@@ -141,118 +141,45 @@
         if (!playoff)
         {
             List<WeekItems> Model = new List<WeekItems>();
-            List<WeekItems> newModel = (from m in DB.Matches.Where(x => x.WeekId == weekid)
-                                        join t1 in DB.Teams on m.TeamNo1 equals t1.Id
-                                        join t2 in DB.Teams on m.TeamNo2 equals t2.Id
-                                        select new WeekItems
-                                            {
-                                                Id = m.Id,
-                                                Rink = m.Rink,
-                                                Team1No = t1.TeamNo,
-                                                Team2No = t2.TeamNo,
-                                                Team1Score = m.Team1Score,
-                                                Team2Score = m.Team2Score,
-                                                Forfeit = m.ForFeitId == -1 ? "Both" : (m.ForFeitId != 0 ? $"Team No {m.ForFeitId}": ""),
-                                                Team1Id = t1.Id,
-                                                Team2Id = t2.Id
-                                            }
-                         ).OrderBy(x => x.Rink).ToList();
-
-            foreach (WeekItems item in newModel)
+            foreach(MatchView view in DB.MatchViews.Where(x=>x.Weekid == thisweekid).OrderBy(x=>x.Rink).ToList())
             {
-                var index = Model.FindIndex(s => s.Rink == item.Rink);
-
-                TeamMate lead1 = new TeamMate();
-                TeamMate lead2 = new TeamMate();
-                TeamMate viceskip1 = new TeamMate();
-                TeamMate viceskip2 = new TeamMate();
-
-
-                TeamMate skip1 = (from t in DB.Teams.Where(x => x.Id == item.Team1Id)
-                                  join p in DB.Players on t.Skip equals p.Id
-                                  join m in DB.Memberships on p.MembershipId equals m.Id
-                                  select new TeamMate
-                                      {
-                                          Name = m.NickName,
-                                          WheelChair = m.Wheelchair
-                                      }).ToList().First();
-
-                TeamMate skip2 = (from t in DB.Teams.Where(x => x.Id == item.Team2Id)
-                                  join p in DB.Players on t.Skip equals p.Id
-                                  join m in DB.Memberships on p.MembershipId equals m.Id
-                                  select new TeamMate
-                                      {
-                                          Name = m.NickName,
-                                          WheelChair = m.Wheelchair
-                                      }
-                ).ToList().First();
-
-
-                item.Team1 = $"{item.Team1No}({skip1.Name})";
-                item.Team2 =  $"{item.Team2No}({skip2.Name})";
-                item.Team1Style = skip1.WheelChair ? "color:red;" : "";
-                item.Team2Style = skip2.WheelChair ? "color:red;" : "";
+                WeekItems item = new WeekItems()
+                    {
+                        Team1No = view.TeamNo1,
+                        Team2No = view.TeamNo2,
+                        Team1Score = view.Team1Score,
+                        Team2Score = view.Team2Score,
+                        Rink = view.Rink,
+                        Forfeit = view.ForFeitId == 0 ? "" : (view.ForFeitId == -1 ? "Both" : $"Team No. {view.ForFeitId}"),
+                        Id = view.Id,
+                        Team1Id = view.Team1Id,
+                        Team2Id = view.Team2Id
+                    };
+                item.Team1Players = $"{item.Team1No}({view.Skip1})";
+                item.Team2Players =  $"{item.Team2No}({view.Skip2})";
+                item.Team1Style = view.Skip1W.Value ? "color:red;" : "";
+                item.Team2Style = view.Skip2W.Value ? "color:red;" : "";
 
 
                 if (league.TeamSize < 3)
                 {
-                    lead1 = (from t in DB.Teams.Where(x => x.Id == item.Team1Id)
-                             join p in DB.Players on t.Lead equals p.Id
-                             join m in DB.Memberships on p.MembershipId equals m.Id
-                             select new TeamMate
-                                 {
-                                     Name = m.NickName,
-                                     WheelChair = m.Wheelchair
-                                 }).ToList().First();
-
-                    lead2 = (from t in DB.Teams.Where(x => x.Id == item.Team2Id)
-                             join p in DB.Players on t.Lead equals p.Id
-                             join m in DB.Memberships on p.MembershipId equals m.Id
-                             select new TeamMate
-                                 {
-                                     Name = m.NickName,
-                                     WheelChair = m.Wheelchair
-                                 }
-                    ).ToList().First();
-
-
-                    item.Team1 = $"{item.Team1No}({skip1.Name}, {lead1.Name})";
-                    item.Team2 = $"{item.Team2No}({skip2.Name}, {lead2.Name})";
-                    item.Team1Style = skip1.WheelChair || lead1.WheelChair ? "color:red;" : "";
-                    item.Team2Style = skip2.WheelChair || lead2.WheelChair ? "color:red;" : "";
+                    item.Team1Players = $"{item.Team1No}({view.Skip1}, {view.Lead1})";
+                    item.Team2Players = $"{item.Team2No}({view.Skip2}, {view.Lead1})";
+                    item.Team1Style = view.Skip1W.Value || view.Lead1W.Value ? "color:red;" : "";
+                    item.Team2Style = view.Skip2W.Value || view.Lead2W.Value ? "color:red;" : "";
                 }
 
                 if (league.TeamSize == 3)
                 {
-                    viceskip1 = (from t in DB.Teams.Where(x => x.Id == item.Team1Id)
-                                 join p in DB.Players on t.ViceSkip equals p.Id
-                                 join m in DB.Memberships on p.MembershipId equals m.Id
-                                 select new TeamMate
-                                     {
-                                         Name = m.NickName,
-                                         WheelChair = m.Wheelchair
-                                     }).ToList().First();
-
-                    viceskip2 = (from t in DB.Teams.Where(x => x.Id == item.Team2Id)
-                                 join p in DB.Players on t.ViceSkip equals p.Id
-                                 join m in DB.Memberships on p.MembershipId equals m.Id
-                                 select new TeamMate
-                                     {
-                                         Name = m.NickName,
-                                         WheelChair = m.Wheelchair
-                                     }
-                    ).ToList().First();
-
-
-                    item.Team1 = $"{item.Team1No}({skip1.Name}, {viceskip1.Name}, {lead1.Name})";
-                    item.Team2 = $"{item.Team2No}({skip2.Name}, {viceskip2.Name}, {lead2.Name})";
-                    item.Team1Style = skip1.WheelChair || lead1.WheelChair || viceskip1.WheelChair ? "color:red;" : "";
-                    item.Team2Style = skip2.WheelChair || lead2.WheelChair || viceskip2.WheelChair ? "color:red;" : "";
+                    item.Team1Players = $"{item.Team1No}({view.Skip1}, {view.Vice1}, {view.Lead1})";
+                    item.Team2Players = $"{item.Team2No}({view.Skip2}, {view.Vice2}, {view.Lead1})";
+                    item.Team1Style = view.Skip1W.Value || view.Vice1W.Value || view.Lead1W.Value ? "color:red;" : "";
+                    item.Team2Style = view.Skip2W.Value || view.Vice2W.Value || view.Lead2W.Value ? "color:red;" : "";
                 }
 
                 Model.Add(item);
             }
-            Model.OrderBy(x => x.Rink);
+            
             QModel = Model.AsQueryable();
         }
         StateHasChanged();
@@ -285,7 +212,6 @@
             catch (DbUpdateConcurrencyException) { }
             SetupWeek(mr1.WeekId);
         }
-       
     }
 
 
@@ -293,12 +219,12 @@
     {
         public int Id { get; set; }
         public int Rink { get; set; }
-        public string? Team1 { get; set; }
+        public string? Team1Players { get; set; }
         public int Team1Id { get; set; }
         public string? Team1Style { get; set; }
         public int Team1Score { get; set; }
         public int Team1No { get; set; }
-        public string? Team2 { get; set; }
+        public string? Team2Players { get; set; }
         public int Team2Score { get; set; }
         public int Team2No { get; set; }
         public int Team2Id { get; set; }
@@ -312,13 +238,7 @@
         public string? date { get; set; }
     }
 
-    private class TeamMate
-    {
-        public string Name { get; set; }
-        public bool WheelChair { get; set; }
-
-    }
-
+    
     public class MySchedule
     {
         public int Id { get; set; }
