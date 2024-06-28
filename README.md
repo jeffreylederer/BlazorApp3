@@ -32,6 +32,8 @@ The major issues I had with the .Net Core entityframework were:
 This is one of the goals for writing this application: database authentication and authorization services. I played around with some services I found on the web. The breakthrough was figuring out how to use cookies to make log ins persistent. Users, Roles, and the link 
 between users and roles is stored in the table userrole in the database. Thought it would be easy to give users multiple roles, this application only needs to give each user just one role.
 
+In my day job, I created a test Blazer App that uses Active Directory authentication and authorization. This was must easies to do then database authentication and authorization. 
+
 ## Seed Database
 Since you need a SiteAdmin role to create additional users, I seeded the database with roles and a SiteAdmin, Password = password. You can create addtional Users with the User CRUD pages. This used the DbInitializerService service to seed the database.
 
