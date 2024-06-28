@@ -17,6 +17,9 @@ This app was created using the Blazer Server template and selecting no authentic
 * Microsoft.EntityFrameworkCore.Tools" Version="8.0.6">
 * Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.2" 
 * QuestPDF" Version="2022.12.15" <-- use this version, later versions require you to pay license
+* Serilog.AspNetCore
+* Serilog.Settings.Configuration
+* Serilog.Sinks.MSSqlServer
 * System.ComponentModel.Annotations" Version="5.0.0" 
 
 ## Add a database context ##
@@ -49,6 +52,9 @@ I used QuestPDF to create a single PDF document. It is accessable from the Teams
 ## Session Object ##
 .Net Core does not support the Session Object. This application had to store from page to page the current league id.  I used ProtectedSessionStore. On the Welcome page, I created a ProtectedSessionStore object and then in each table index page I retrieved that object.
 Since the object is stored using browser storage, you need to work with the object in a override of the OnAfterRenderAsync method and set the rendermode to InteractiveServer.
+
+## Logging ##
+I added Serilog package to write the log to the database. There is a page to display the last 50 entries and a page to show the details of one log record.
 
 ## Misc ##
 There is still a bug in creating a new user. It ignores the role selection from the dropdown selection control.
