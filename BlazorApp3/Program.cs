@@ -1,4 +1,5 @@
 ﻿using BlazerApp1.Models.Mappings;
+using BlazerApp3.Infralayer;
 using BlazerApp3.Services;
 using BlazorApp3.Components;
 using BlazorApp3.Model;
@@ -6,8 +7,12 @@ using Blazored.SessionStorage;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Builder;
-using BlazerApp3.Infralayer;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Serilog;
+using Serilog.Events;
+using Serilog.Sinks.MSSqlServer;
+using System.Configuration;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,9 +28,6 @@ builder.Services.AddDbContextFactory<TournamentContext>(opt =>
 builder.Services.AddQuickGridEntityFrameworkAdapter();
 
 #region Authentication
-//for use SecurityTrimming
-//builder.Services.AddDNTCommonWeb();
-//Authentication
 builder.Services.AddScoped<IUsersService, UsersService>();
 builder.Services.AddScoped<ISecurityService, SecurityService>();
 builder.Services.AddScoped<ICookieValidatorService, CookieValidatorService>();
@@ -73,6 +75,7 @@ builder.Services.AddAntiforgery(options =>
     options.Cookie.SameSite = SameSiteMode.Strict;
 });
 
+builder.Host.UseSerilog((context, configuration) => configuration.ReadFrom.Configuration(context.Configuration));
 
 
 var app = builder.Build();
@@ -88,6 +91,9 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
+
+//Add support to logging request with SERILOG
+app.UseSerilogRequestLogging();
 
 app.UseAuthentication();
 app.UseAntiforgery();

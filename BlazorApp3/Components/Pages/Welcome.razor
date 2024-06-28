@@ -18,6 +18,7 @@
 @using System.Security.Claims
 @inject ProtectedSessionStorage ProtectedSessionStore
 @rendermode InteractiveServer
+@inject ILogger<Welcome> logger;
 
 
     
@@ -72,7 +73,7 @@
         {
             await ProtectedSessionStore.SetAsync("leagueid", leagueid);
             league = DB.Leagues.Find(leagueid);
-             var authstate = await GetAuthenticationStateAsync.GetAuthenticationStateAsync();
+            var authstate = await GetAuthenticationStateAsync.GetAuthenticationStateAsync();
             var user = authstate.User;
             if (user != null)
             {
@@ -86,6 +87,8 @@
                 }
             }
             StateHasChanged();
+
+            logger.LogError("Started with league {1}", league.LeagueName);
         }
     }
 

@@ -19,6 +19,8 @@ public partial class TournamentContext : DbContext
 
     public virtual DbSet<League> Leagues { get; set; }
 
+    public virtual DbSet<Logging> Loggings { get; set; }
+
     public virtual DbSet<Match> Matches { get; set; }
 
     public virtual DbSet<MatchView> MatchViews { get; set; }
@@ -89,6 +91,22 @@ public partial class TournamentContext : DbContext
                 .HasForeignKey(d => d.StartWeek)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_League_RinkOrder");
+        });
+
+        modelBuilder.Entity<Logging>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_Logging");
+
+            entity.ToTable("Logging");
+
+            entity.Property(e => e.Id).HasColumnName("id").UseIdentityColumn(1,1);
+            entity.Property(e => e.TimeStamp).HasColumnType("datetime");
+            entity.Property(e => e.Message).HasColumnName("Message").IsUnicode(true);
+            entity.Property(e => e.MessageTemplate).HasColumnName("MessageTemplate").IsUnicode(true);
+            entity.Property(e => e.Level).HasColumnName("Level").IsUnicode(true);
+            entity.Property(e => e.Exception).HasColumnName("Exception").IsUnicode(true);
+            entity.Property(e => e.Properties).HasColumnName("Properties").IsUnicode(true);
+
         });
 
         modelBuilder.Entity<Match>(entity =>

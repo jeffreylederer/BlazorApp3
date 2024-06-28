@@ -1,0 +1,76 @@
+﻿@page "/loggings/details"
+@inject BlazorApp3.Model.TournamentContext DB
+@using BlazorApp3.Model
+@inject NavigationManager NavigationManager
+@using Microsoft.DotNet.Scaffolding.Shared.CodeModifier.CodeChange
+@using Microsoft.EntityFrameworkCore
+@using System.Xml.Linq
+
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details of Log</h1>
+
+<div>
+    <h4>log</h4>
+    <hr />
+   @{
+        if(log == null)
+        {
+            <p>Loading...</p>
+        }
+        else 
+        {
+            <dl class="row">
+                <dt class="col-sm-2">Time Stamp</dt>
+                <dd class="col-sm-10">@log.TimeStamp.Value.ToShortTimeString() @log.TimeStamp.Value.ToShortDateString()</dd>
+                <dt class="col-sm-2">Level</dt>
+                <dd class="col-sm-10">@log.Level</dd>
+                <dt class="col-sm-2">Message</dt>
+                <dd class="col-sm-10">@log.Message</dd>
+                <dt class="col-sm-2">Message Template</dt>
+                <dd class="col-sm-10">@log.MessageTemplate</dd>
+                <dt class="col-sm-2">Exception</dt>
+                <dd class="col-sm-10">@log.Exception</dd>
+                <dt class="col-sm-2">Properties</dt>
+                <dd class="col-sm-10">@formattedJson</dd>
+       
+            </dl>
+            <div>
+                <a href="@($"/loggings")">Back to List</a>
+            </div>
+    
+       
+    }
+}
+ </div>
+
+@code {
+    Logging? log;
+
+
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+    MarkupString? formattedJson;
+    protected override async Task OnInitializedAsync()
+    {
+        log = await DB.Loggings.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (log is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+        if (!string.IsNullOrEmpty(log.Properties))
+        {
+            string doc = XDocument.Parse(log.Properties).ToString();
+            doc = doc.Replace("<", "&lt;").Replace(">", "&gt;");
+            doc = doc.Replace("\r\n", "<br/>").Replace(" ", "&nbsp;");
+            formattedJson = new MarkupString(doc);
+        }
+        else
+        {
+            formattedJson = new MarkupString("No Properties");
+        }
+
+    }
+}

@@ -1,0 +1,21 @@
+﻿@page "/loggings"
+
+@inject BlazorApp3.Model.TournamentContext DB
+@using BlazorApp3.Model
+@using Microsoft.AspNetCore.Components.QuickGrid
+
+<PageTitle>Index</PageTitle>
+
+
+<h3>Logs</h3>
+
+<QuickGrid Class="table table-striped table-condensed" Items="DB.Loggings.OrderByDescending(x=>x.TimeStamp).Take(50)">
+    <PropertyColumn Property="logs => logs.TimeStamp" Format=" HH:mm M/d/yyyy" Title="Time Stamp"  Class="time"/>
+    <PropertyColumn Property="logs => logs.Level" />
+    <PropertyColumn Property="logs => logs.Message"  Class="message"/>
+    <TemplateColumn Context="logs">
+        <a href="@($"loggings/details?id={logs.Id}")">Details</a>
+       
+    </TemplateColumn>
+</QuickGrid>
+
