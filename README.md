@@ -8,7 +8,6 @@ This app was created using the Blazer Server template and selecting no authentic
 ## Added the following Nuget Packages
 * Ardalis.GuardClauses" Version="4.5.0" 
 * AutoMapper" Version="13.0.1" 
-* DNTCommon.Web.Core" Version="5.3.3" 
 * EntityFramework" Version="6.4.4" 
 * jQuery" Version="3.7.1" 
 * Microsoft.AspNetCore.Components.QuickGrid" Version="8.0.6" 
@@ -23,7 +22,7 @@ This app was created using the Blazer Server template and selecting no authentic
 * System.ComponentModel.Annotations" Version="5.0.0" 
 
 ## Add a database context ##
-I already had an existing data, so i just used Scaffold-DbContext to create a Model directory with DB context. I also add a connection string to appseting.json file.
+I already had an existing populated database, so i just used Scaffold-DbContext to create a Model directory with DB context. I also add a connection string to appseting.json file.
 
 The major issues I had with the .Net Core entityframework were:
 * It really does not support stored procedures like the older version. It does support views.
