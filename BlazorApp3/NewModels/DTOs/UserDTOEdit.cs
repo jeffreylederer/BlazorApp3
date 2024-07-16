@@ -14,6 +14,7 @@ namespace BlazorApp3.NewModels.DTOs
         public string DisplayName { get; set; }
 
         [Display(Name = "Role")]
+        [Required]
         public int Role { get; set; }
 
         public string? RoleName { get; set; }

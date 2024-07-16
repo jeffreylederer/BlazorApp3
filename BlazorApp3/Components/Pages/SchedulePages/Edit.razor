@@ -1,4 +1,5 @@
 ﻿@page "/Schedules/edit"
+@using AutoMapper
 @using BlazorApp3.Components.Layout
 @inherits LayoutComponentBase
 @layout LeagueLayout
@@ -6,8 +7,12 @@
 @inject BlazorApp3.Model.TournamentContext DB
 @using BlazorApp3.Model
 @inject NavigationManager NavigationManager
+@using BlazorApp3.NewModels.DTOs
 @using Microsoft.EntityFrameworkCore
 @using System.Text
+@inject IMapper Mapper
+@rendermode InteractiveServer
+
 
 <PageTitle>Edit</PageTitle>
 
@@ -59,16 +64,18 @@ else
     public int Id { get; set; }
 
     [SupplyParameterFromForm]
-    public Schedule? Schedule { get; set; }
+    public ScheduleDTO? Schedule { get; set; }
+    public Schedule? schedule;
 
     protected override async Task OnInitializedAsync()
     {
-        Schedule ??= await DB.Schedules.FirstOrDefaultAsync(m => m.Id == Id);
+        schedule ??= await DB.Schedules.FirstOrDefaultAsync(m => m.Id == Id);
 
-        if (Schedule is null)
+        if (schedule is null)
         {
             NavigationManager.NavigateTo("notfound");
         }
+        Schedule = Mapper.Map<ScheduleDTO>(schedule);
     }
 
   
@@ -76,7 +83,8 @@ else
     // For more details, see https://aka.ms/RazorPagesCRUD.
     public async Task UpdateSchedule()
     {
-        DB.Attach(Schedule!).State = EntityState.Modified;
+        Mapper.Map(Schedule, schedule);
+        DB.Attach(schedule!).State = EntityState.Modified;
 
         try
         {

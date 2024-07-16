@@ -1,11 +1,15 @@
 ﻿@page "/schedules/create"
+@using AutoMapper
 @using BlazorApp3.Components.Layout
 @inherits LayoutComponentBase
 @layout LeagueLayout
 
 @inject BlazorApp3.Model.TournamentContext DB
 @using BlazorApp3.Model
+@using System.ComponentModel.DataAnnotations
+@using BlazorApp3.NewModels.DTOs
 @inject NavigationManager NavigationManager
+@inject IMapper Mapper
 
 
 <PageTitle>Create</PageTitle>
@@ -47,7 +51,7 @@
 
 @code {
     [SupplyParameterFromForm]
-    public SingleDate Schedule { get; set; } = new() { GameDate = DateOnly.FromDateTime(DateTime.Now) };
+    public ScheduleDTO Schedule { get; set; } = new() { GameDate = DateOnly.FromDateTime(DateTime.Now), PlayOffs=false, Cancelled=false };
 
     [SupplyParameterFromQuery]
     public int leagueid { get; set; }
@@ -55,24 +59,13 @@
     // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
     public async Task AddSchedule()
     {
-        var schedule = new Schedule()
-            {
-                Leagueid = leagueid,
-                GameDate = Schedule.GameDate,
-                Cancelled = Schedule.Cancelled,
-                PlayOffs = Schedule.PlayOffs
-            };
+        Schedule schedule = new();
+        Schedule.Leagueid = leagueid;
+        Mapper.Map(Schedule, schedule);
         DB.Schedules.Add(schedule);
         await DB.SaveChangesAsync();
         NavigationManager.NavigateTo("/schedules");
     }
 
-    public class SingleDate
-    {
-        public DateOnly GameDate { get; set; }
-
-        public bool Cancelled { get; set; }
-
-        public bool PlayOffs { get; set; }
-    }
+    
 }
