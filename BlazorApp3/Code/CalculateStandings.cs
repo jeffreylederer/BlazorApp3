@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using BlazorApp3.Model;
 using BlazorApp3.Models;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
@@ -20,27 +21,31 @@ namespace BlazorApp3.Code
         /// <param name="teamsize">number of players per team</param>
         /// <param name="leagueid">the record id of the league table</param>
         /// <returns></returns>
-        public static TournamentDS.StandDataTable Doit(int weekid, League league)
+        public static List<Standing> Doit(int weekid, League league)
         {
             int teamsize = league.TeamSize;
-            var ds = new TournamentDS();
+           
             var list = new List<Standing>();
-            using (var db = new TournamentEntities())
+            using (var db = new TournamentContext())
             {
+                var teamMember = db.TeamsViews.Where(x => x.Leagueid == league.Id).ToList();
                 // get the names of the player for each team
-                foreach (var team in db.Teams.Where(x=>x.Leagueid==league.id))
+                foreach (var team in db.Teams.Where(x=>x.Leagueid==league.Id).ToList())
                 {
                     string players = "";
+                    var theTeam = teamMember.Find(x => x.TeamNo == team.TeamNo);
+                    if (theTeam == null)
+                        continue;
                     switch (teamsize)
                     {
                         case 1:
-                            players = team.Player.Membership.NickName;
+                            players = $"{theTeam.Skip}";
                             break;
                         case 2:
-                            players = $"{team.Player.Membership.NickName}, {team.Player2.Membership.NickName}";
+                            players = $"{theTeam.Skip}, {theTeam.Lead}";
                             break;
                         case 3:
-                            players = $"{team.Player.Membership.NickName}, {team.Player1.Membership.NickName}, {team.Player2.Membership.NickName}";
+                            players = $"{theTeam.Skip}, {theTeam.ViceSkip}, {theTeam.Lead}";
                             break;
                     }
                     list.Add(new Standing()
@@ -57,7 +62,7 @@ namespace BlazorApp3.Code
                 }
 
                 // determine the total score and wins and loses for each team for each week
-                foreach(var week in db.Schedules.Where(x => x.id <= weekid && x.Leagueid == league.id))
+                foreach(var week in db.Schedules.Where(x => x.Id <= weekid && x.Leagueid == league.Id))
                 {
 
                     //cancelled weeks do not count
@@ -67,13 +72,14 @@ namespace BlazorApp3.Code
                     var numMatches = 0;
                     var bye = false;
                     bool forfeit = false;
-                    foreach (var match in db.Matches.Where(x => x.WeekId == week.id))
+                    
+                    foreach (var match in db.MatchViews.Where(x=>x.Weekid == weekid))
                     {
                         // both teams forfeits
                         if (match.Rink != -1 && match.ForFeitId == -1)
                         {
-                            var winner = list.Find(x => x.TeamNumber == match.Team.TeamNo);
-                            var loser = list.Find(x => x.TeamNumber == match.Team1.TeamNo);
+                            var winner = list.Find(x => x.TeamNumber == match.TeamNo1);
+                            var loser = list.Find(x => x.TeamNumber == match.TeamNo2);
                             winner.Loses++;
                             loser.Loses++;
                            
@@ -81,8 +87,8 @@ namespace BlazorApp3.Code
                         // tie game
                         else if (match.Team1Score == match.Team2Score && match.Rink != -1 && match.ForFeitId == 0)
                         {
-                            var winner = list.Find(x => x.TeamNumber == match.Team.TeamNo);
-                            var loser = list.Find(x => x.TeamNumber == match.Team1.TeamNo);
+                            var winner = list.Find(x => x.TeamNumber == match.TeamNo1);
+                            var loser = list.Find(x => x.TeamNumber == match.TeamNo2);
                             winner.Ties++;
                             loser.Ties++;
                             if (league.PointsLimit)
@@ -102,15 +108,15 @@ namespace BlazorApp3.Code
                         //team 1 wins
                         else if (match.Team1Score > match.Team2Score && match.Rink != -1 && match.ForFeitId == 0)
                         {
-                            var winner = list.Find(x => x.TeamNumber == match.Team.TeamNo);
-                            var loser = list.Find(x => x.TeamNumber == match.Team1.TeamNo);
+                            var winner = list.Find(x => x.TeamNumber == match.TeamNo1);
+                            var loser = list.Find(x => x.TeamNumber == match.TeamNo2);
                             winner.Wins++;
                             loser.Loses++;
                             if (league.PointsLimit)
                             {
                                 winner.TotalScore += Math.Min(20, match.Team1Score);
                                 loser.TotalScore += Math.Min(20, match.Team2Score);
-                        }
+                            }
                             else
                             {
                                 winner.TotalScore += match.Team1Score;
@@ -121,8 +127,8 @@ namespace BlazorApp3.Code
                         //team 2 wins
                         else if (match.Rink != -1 && match.ForFeitId == 0)
                         {
-                            var winner = list.Find(x => x.TeamNumber == match.Team1.TeamNo);
-                            var loser = list.Find(x => x.TeamNumber == match.Team.TeamNo);
+                            var winner = list.Find(x => x.TeamNumber == match.TeamNo2);
+                            var loser = list.Find(x => x.TeamNumber == match.TeamNo1);
                             winner.Wins++;
                             loser.Loses++;
                             if (league.PointsLimit)
@@ -140,7 +146,7 @@ namespace BlazorApp3.Code
                         // one team forfeits
                         else if (match.Rink != -1 && match.ForFeitId > 0)
                         {
-                            var winner = list.Find(x => x.TeamNumber == (match.Team.TeamNo== match.ForFeitId? match.Team1.TeamNo: match.Team.TeamNo));
+                            var winner = list.Find(x => x.TeamNumber == (match.TeamNo1== match.ForFeitId? match.TeamNo1: match.TeamNo2));
                             var loser = list.Find(x => x.TeamNumber == match.ForFeitId);
                             forfeit = true;
                             winner.Wins++;
@@ -149,7 +155,7 @@ namespace BlazorApp3.Code
                         //bye
                         else
                         {
-                            var winner = list.Find(x => x.TeamNumber == match.Team.TeamNo);
+                            var winner = list.Find(x => x.TeamNumber == match.TeamNo1);
                             winner.Byes++;
                             bye = true;
                         }
@@ -160,16 +166,16 @@ namespace BlazorApp3.Code
                     if (bye || forfeit)
                     {
 
-                        foreach (var match in db.Matches.Where(x => x.WeekId == week.id))
+                        foreach (var match in db.Matches.Where(x => x.WeekId == week.Id))
                         {
                             if (match.Rink != -1 && match.ForFeitId > 0)
                             {
-                                var winner = list.Find(x => x.TeamNumber == (match.Team.TeamNo == match.ForFeitId ? match.Team1.TeamNo : match.Team.TeamNo));
+                                var winner = list.Find(x => x.TeamNumber == (match.TeamNo1 == match.ForFeitId ? match.TeamNo1 : match.TeamNo2));
                                 winner.TotalScore += 14;
                             }
                             else if (match.Rink == -1 && match.ForFeitId !=-1)
                             {
-                                var winner = list.Find(x => x.TeamNumber == match.Team.TeamNo);
+                                var winner = list.Find(x => x.TeamNumber == match.TeamNo1);
                                 winner.TotalScore += 14;
                             }
                         }
@@ -203,38 +209,37 @@ namespace BlazorApp3.Code
                 }
 
             }
-            ds.Stand.Clear();
+           
             list.Sort((a, b) => (b.TotalPoints).CompareTo(a.TotalPoints));
-            foreach (var item in list)
+            for(int i = 0; i< list.Count;i++)
             {
+                var item = list[i];
                 if (item.TotalPoints != previous.TotalPoints)
                 {
                     place = nextplace;
                 }
-                ds.Stand.AddStandRow(item.TeamNumber,item.Players, item.TotalScore, place, item.Wins, item.Loses, item.Ties, item.Byes, item.DivisionId);
-                previous = item;
+                list[i].Place = place;
                 nextplace++;
             }
-            return ds.Stand;
+            return list;
         }
     }
 
 
-    internal class Standing
+    public class Standing
     {
         public int TeamNumber { get; set; }
         public int Wins { get; set; }
         public int Loses { get; set; }
         public int TotalScore { get; set; }
-        public string Players { get; set; }
+        public string? Players { get; set; }
         public int Ties { get; set; }
         public int Byes { get; set; }
         public short DivisionId { get; set; }
        
         public int TotalPoints { get; set; }
 
-        
-        
-        
+        public int Place { get; set; }
+
     }
 }

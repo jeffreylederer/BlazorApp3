@@ -12,6 +12,7 @@ namespace BlazerApp1.Models.Mappings
             CreateMap<UserRegisterDTO,User>().ReverseMap();
             CreateMap<LeagueDTO,League>().ReverseMap();
             CreateMap<League, LeagueDTO>().ReverseMap();
+            CreateMap<Membership, MembershipDTO>().ReverseMap();
         }
     }
 }

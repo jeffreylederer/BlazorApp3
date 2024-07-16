@@ -1,8 +1,12 @@
 ﻿@page "/Memberships/edit"
 @inject BlazorApp3.Model.TournamentContext DB
+@using AutoMapper
 @using BlazorApp3.Model
 @inject NavigationManager NavigationManager
+@using BlazorApp3.NewModels.DTOs
 @using Microsoft.EntityFrameworkCore
+@inject IMapper Mapper
+@rendermode InteractiveServer
 
 
 <PageTitle>Edit</PageTitle>
@@ -58,15 +62,33 @@ else
     public int Id { get; set; }
 
     [SupplyParameterFromForm]
-    public Membership? Membership { get; set; }
+    public MembershipDTO? Membership { get; set; }
+    private Membership? membership;
 
+    protected override async Task OnAfterRenderAsync(bool firstTime)
+    {
+        if (firstTime)
+        {
+            membership = await DB.Memberships.FirstOrDefaultAsync(m => m.Id == Id);
+
+
+            if (membership is null)
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            Membership = Mapper.Map<MembershipDTO>(membership);
+            StateHasChanged();
+        }
+
+    }
  
 
     // To protect from overposting attacks, enable the specific properties you want to bind to.
     // For more details, see https://aka.ms/RazorPagesCRUD.
     public async Task UpdateMembership()
     {
-        DB.Attach(Membership!).State = EntityState.Modified;
+        Mapper.Map(Membership, membership);
+        DB.Attach(membership!).State = EntityState.Modified;
 
         try
         {

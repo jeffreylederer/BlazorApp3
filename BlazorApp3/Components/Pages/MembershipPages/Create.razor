@@ -1,9 +1,11 @@
 ﻿@page "/memberships/create"
 @inject BlazorApp3.Model.TournamentContext DB
+@using AutoMapper
 @using BlazorApp3.Model
+@using BlazorApp3.NewModels.DTOs
 @using BlazorApp3.Services
 @inject NavigationManager NavigationManager
-
+@inject IMapper Mapper
 
 <PageTitle>Create</PageTitle>
 
@@ -52,36 +54,20 @@
 @code {
 
     [SupplyParameterFromForm]
-    public NwwMember Membership { get; set; } = new();
+    public MembershipDTO Membership { get; set; } = new();
 
     // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
     public async Task AddMembership()
     {
-        Membership member = new Membership()
-            {
-                FirstName = Membership.FirstName,
-                LastName = Membership.LastName,
-                Shortname = Membership.Shortname,
-                Wheelchair = Membership.Wheelchair
-    };
-        DB.Memberships.Add(member);
+        Membership membership = new();
+        Mapper.Map(Membership, membership);
+        DB.Memberships.Add(membership);
         await DB.SaveChangesAsync();
         NavigationManager.NavigateTo("/memberships");
     }
 
 
-    public class NwwMember
-    {
-        public string FirstName { get; set; } = null!;
-
-        public string LastName { get; set; } = null!;
-
-        public string FullName { get; set; } = null!;
-
-        public string? Shortname { get; set; }
-
-        public bool Wheelchair { get; set; }
-    }
+   
 
    
 }
