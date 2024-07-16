@@ -1,12 +1,16 @@
 ﻿@page "/Leagues/edit"
+@using AutoMapper
 @using BlazorApp3.Components.Layout
 @inherits LayoutComponentBase
 @layout LeagueLayout
-
+@using BlazorApp3.NewModels.DTOs
 @inject BlazorApp3.Model.TournamentContext DB
 @using BlazorApp3.Model
 @inject NavigationManager NavigationManager
 @using Microsoft.EntityFrameworkCore
+@inject IMapper Mapper 
+@rendermode InteractiveServer
+
 
 <PageTitle>Edit</PageTitle>
 
@@ -109,27 +113,35 @@ else
     public int Id { get; set; }
 
     [SupplyParameterFromForm(FormName = "edit")]
-    public League? League { get; set; }
+    public LeagueDTO? League { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    public League? league;
+
+    protected override async Task OnAfterRenderAsync(bool firstTime)
     {
-        League ??= await DB.Leagues.FirstOrDefaultAsync(m => m.Id == Id);
-
-
-        if (League is null)
+        if (firstTime)
         {
-            NavigationManager.NavigateTo("notfound");
+            league = await DB.Leagues.FirstOrDefaultAsync(m => m.Id == Id);
+
+
+            if (league is null)
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            League = Mapper.Map<LeagueDTO>(league);
+            StateHasChanged();
         }
+
     }
 
-   
+
     // To protect from overposting attacks, enable the specific properties you want to bind to.
     // For more details, see https://aka.ms/RazorPagesCRUD.
     public async Task UpdateLeague()
     {
 
-       
-        DB.Attach(League!).State = EntityState.Modified;
+        Mapper.Map(League, league);
+        DB.Attach(league!).State = EntityState.Modified;
 
         try
         {

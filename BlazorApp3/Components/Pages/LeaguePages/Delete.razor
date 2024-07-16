@@ -101,7 +101,7 @@
     {
         try
         {
-           
+
             foreach(var item in DB.Teams.Where(x=>x.Leagueid ==league.Id))
             {
                 DB.Matches.RemoveRange(DB.Matches.Where(x => x.TeamNo1 == item.Id).ToList());
@@ -113,19 +113,23 @@
             DB.UserLeagues.RemoveRange(DB.UserLeagues.Where(x => x.LeagueId == league.Id));
             DB.Leagues.Remove(league!);
             await DB.SaveChangesAsync();
-            NavigationManager.NavigateTo("/leagues");
+            
         }
         catch (DbUpdateConcurrencyException)
         {
             message = "League cannot be deleted because the record has been altered or deleted since this page was loaded";
+            return;
         }
         catch (DbUpdateException ex)
         {
             message = "League cannot be deleted because this league has teams and/or players";
+            return;
         }
         catch (Exception ex)
         {
             message = ex.Message;
+            return;
         }
+        NavigationManager.NavigateTo("/leagues");
     }
 }

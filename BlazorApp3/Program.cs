@@ -1,4 +1,5 @@
-﻿using BlazerApp1.Models.Mappings;
+﻿using AutoMapper;
+using BlazerApp1.Models.Mappings;
 using BlazerApp3.Infralayer;
 using BlazerApp3.Services;
 using BlazorApp3.Components;
@@ -7,11 +8,8 @@ using Blazored.SessionStorage;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Serilog;
-using Serilog.Events;
-using Serilog.Sinks.MSSqlServer;
-using System.Configuration;
+
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -35,6 +33,16 @@ builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStat
 builder.Services.AddScoped<IUserInfoService, UserInfoService>();
 builder.Services.AddScoped<IDbInitializerService, DbInitializerService>();
 builder.Services.AddHttpContextAccessor();
+
+// Auto Mapper Configurations
+var mapperConfiguration = new MapperConfiguration(configuration =>
+{
+    var profile = new MappingProfile();
+    configuration.AddProfile(profile);
+});
+var mapper = mapperConfiguration.CreateMapper();
+builder.Services.AddSingleton(mapper);
+
 // Needed for cookie auth.
 builder.Services
     .AddAuthentication(options =>
@@ -59,8 +67,9 @@ builder.Services
         };
     });
 #endregion
-//AutoMapper
-builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
+
+
+builder.Services.AddSingleton(mapper);
 builder.Services.AddBlazoredSessionStorage();
 
 builder.Services.AddAntiforgery(options =>

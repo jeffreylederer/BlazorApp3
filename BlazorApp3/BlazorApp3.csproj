@@ -7,7 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Code\CalculateStandings.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Remove="Components\Pages\Login.razor" />
+    <Content Remove="Components\Pages\MatchPages\ByesReport.razor" />
   </ItemGroup>
 
   <ItemGroup>

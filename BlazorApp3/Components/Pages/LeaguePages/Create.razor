@@ -1,22 +1,32 @@
 ﻿@page "/leagues/create"
 
+@using AutoMapper
 @using BlazorApp3.Components.Layout
 @inherits LayoutComponentBase
 @layout LeagueLayout
 
 @inject BlazorApp3.Model.TournamentContext DB
 @using BlazorApp3.Model
+@using BlazorApp3.NewModels.DTOs
+ 
 @inject NavigationManager NavigationManager
+@inject IMapper Mapper
+@rendermode InteractiveServer
 
 <PageTitle>Create</PageTitle>
+@if (League is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <h1>Create</h1>
 
-<h1>Create</h1>
 
-
-        <h4>League</h4>
-        <hr />
-        <div class="row">
-            <div class="col-md-4">
+    <h4>League</h4>
+    <hr />
+    <div class="row">
+        <div class="col-md-4">
                 <EditForm method="post" Model="@League" OnValidSubmit="AddLeague" FormName="create" Enhance>
                     <DataAnnotationsValidator />
                     <ValidationSummary />
@@ -92,6 +102,7 @@
                 </EditForm>
             </div>
         </div>
+        }
  
 
 <div>
@@ -100,26 +111,38 @@
 
 @code {
     [SupplyParameterFromForm(FormName = "create")]
-    public League League { get; set; } = new League()
+    public LeagueDTO? League { get; set; }
+
+    protected override void OnAfterRender(bool firstTime)
+    {
+        if (firstTime)
         {
-            Id = 0,
-            TeamSize = 2,
-            Active = true,
-            TiesAllowed = true,
-            PointsCount = true,
-            WinPoints = 1,
-            TiePoints = 1,
-            ByePoints = 1,
-            StartWeek = 1,
-            PointsLimit = true,
-            Divisions = 1,
-            PlayOffs = false
-        };
+            League  = new LeagueDTO()
+                {
+                    Id = 0,
+                    TeamSize = 2,
+                    Active = true,
+                    TiesAllowed = true,
+                    PointsCount = true,
+                    WinPoints = 1,
+                    TiePoints = 1,
+                    ByePoints = 1,
+                    StartWeek = 1,
+                    PointsLimit = true,
+                    Divisions = 1,
+                    PlayOffs = false
+                };
+            StateHasChanged();
+        }
+    }
 
     // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
     public async Task AddLeague()
     {
-        DB.Leagues.Add(League);
+        
+        League league = new();
+        Mapper.Map(League, league);
+        DB.Leagues.Add(league);
         await DB.SaveChangesAsync();
         NavigationManager.NavigateTo("/leagues");
     }

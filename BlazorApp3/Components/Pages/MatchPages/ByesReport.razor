@@ -1,0 +1,58 @@
+﻿@page "/matches/byesreport"
+
+@using BlazorApp3.Components.Layout
+@inherits LayoutComponentBase
+@layout LeagueLayout
+
+@inject BlazorApp3.Model.TournamentContext DB
+@using BlazorApp3.Model
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject ProtectedSessionStorage ProtectedSessionStore
+@rendermode InteractiveServer
+
+<PageTitle>Byes Report</PageTitle>
+<h3>Byes Report</h3>
+
+@code {
+
+    int? leagueid;
+    League? league;
+
+    protected override async Task OnAfterRenderAsync(bool firstTime)
+    {
+        if (firstTime)
+        {
+            ProtectedBrowserStorageResult<int> result = await ProtectedSessionStore.GetAsync<int>("leagueid");
+            if (result.Success)
+            {
+                leagueid = result.Value;
+                league = DB.Leagues.Find(leagueid.Value);
+                if (league != null)
+                {
+                    List<Byes> byes = new List<Byes>();
+                    foreach (var item in await DB.Schedules.Where(x => x.Leagueid == leagueid).OrderBy(x => x.GameDate).ToListAsync())
+                    {
+                        var matches = await DB.Matches.Where(x => x.Rink == -1 && x.WeekId == item.Id).FirstOrDefaultAsync();
+                        if (matches.Any())
+                            ds.Byes.Add(new Byes()
+
+                    }
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
+    private class Byes
+    {
+        public string? WeekDate { get; set; }
+        public int TeamNo { get; set; }
+        public int Playes { get; set; }
+
+        public Byes(int weekid, int leagueid)
+        {
+            
+        }
+    }
+}
