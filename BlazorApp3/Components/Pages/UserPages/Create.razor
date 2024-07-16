@@ -1,13 +1,16 @@
 ﻿@page "/users/create"
 
-@using BlazerApp3.Models.DTOs
+@using BlazorApp3.NewModels.DTOs
 @using BlazerApp3.Services
 @using BlazorApp3.Model
 @using Microsoft.AspNetCore.Components.Authorization
+@using AutoMapper
 
 @inject BlazorApp3.Model.TournamentContext DB
 @inject NavigationManager NavigationManager
-@inject IUsersService usersService
+@inject IMapper Mapper
+@inject ISecurityService securityService
+@rendermode InteractiveServer
 
 <PageTitle>Create</PageTitle>
 
@@ -18,7 +21,12 @@
         </NotAuthorized>
         <Authorized>
 
-
+@if (roles is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
 <h1>Create</h1>
 
 <h4>User</h4>
@@ -70,6 +78,7 @@
     </div>
     
 </div>
+}
 
 <div>
     <a href="/users">Back to List</a>
@@ -83,22 +92,44 @@
     [SupplyParameterFromForm]
     private UserRegisterDTO UserRegisterModel { get; set; } = new();
 
-    List<Role>? roles;
+    List<Role>? roles=null;
 
-    protected override void OnInitialized()
+    protected override void OnAfterRender(bool firstTime)
     {
-        roles = DB.Roles.ToList();
+        if (firstTime)
+        {
+            roles = DB.Roles.ToList();
+            StateHasChanged();
+        }
+        
     }
 
     // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
     public async Task CreateUser()
     {
-        if (UserRegisterModel.Role == 0)
-            UserRegisterModel.Role = 1;
-        UserRegisterModel = await usersService.CreateUserAsync(UserRegisterModel);
+        var newUser = Mapper.Map<User>(UserRegisterModel);
+
+        try
+        {
+            newUser.LastLoggedIn = null;
+            newUser.Password = securityService.GetSha256Hash(UserRegisterModel.Password);
+            newUser.SerialNumber = Guid.NewGuid().ToString("N");
+            newUser.IsActive = true;
+            var addedUser = await DB.Users.AddAsync(newUser);
+            await DB.SaveChangesAsync();
+            UserRole item = new UserRole()
+                {
+                    RoleId = UserRegisterModel.Role,
+                    UserId = newUser.Id
+                };
+            await DB.UserRoles.AddAsync(item);
+            await DB.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            var mess = ex.Message;
+            return;
+        }
         NavigationManager.NavigateTo("/users");
     }
-
-   
-
  }

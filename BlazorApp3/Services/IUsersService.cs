@@ -1,6 +1,5 @@
-﻿
-using BlazerApp3.Models.DTOs;
-using BlazorApp3.Model;
+﻿using BlazorApp3.Model;
+using BlazorApp3.NewModels.DTOs;
 
 namespace BlazerApp3.Services
 {
@@ -10,7 +9,7 @@ namespace BlazerApp3.Services
         Task<User> FindUserAsync(string username, string password);
         ValueTask<User> FindUserAsync(int userId);
         Task UpdateUserLastActivityDateAsync(int userId);
-        Task<UserRegisterDTO> CreateUserAsync(UserRegisterDTO userRegisterDto);
+        
         IAsyncEnumerable<UserRegisterDTO> GetAllUsersAsync();
 
     }

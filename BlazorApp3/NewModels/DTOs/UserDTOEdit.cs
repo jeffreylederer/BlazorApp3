@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace BlazorApp3.Models.DTOs
+namespace BlazorApp3.NewModels.DTOs
 {
     public class UserDTOEdit
     {

@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
-using BlazerApp3.Models.DTOs;
 using BlazerApp3.Services;
 using BlazorApp3.Model;
+using BlazorApp3.NewModels.DTOs;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -84,34 +84,7 @@ namespace BlazerApp3.Services
             }
         }
 
-        public async Task<UserRegisterDTO> CreateUserAsync(UserRegisterDTO userRegisterDto)
-        {
-            var newUser = _mapper.Map<User>(userRegisterDto);
-
-            try
-            {
-                newUser.LastLoggedIn = null;
-                newUser.Password = _securityService.GetSha256Hash(userRegisterDto.Password);
-                newUser.SerialNumber = Guid.NewGuid().ToString("N");
-                newUser.IsActive = true;
-                var addedUser = await _dbContext.Users.AddAsync(newUser);
-                await _dbContext.SaveChangesAsync();
-                UserRole item = new UserRole()
-                {
-                    RoleId = userRegisterDto.Role,
-                    UserId = newUser.Id
-                };
-                await _dbContext.UserRoles.AddAsync(item);
-                await _dbContext.SaveChangesAsync();
-                return _mapper.Map<UserRegisterDTO>(addedUser.Entity);
-            }
-            catch (Exception ex) 
-            {
-                var mess = ex.Message;
-            }
-            return new UserRegisterDTO();
-           
-        }
+       
 
         public IAsyncEnumerable<UserRegisterDTO> GetAllUsersAsync()
         {

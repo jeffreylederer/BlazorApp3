@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 
-namespace BlazerApp1.Models.DTOs
+namespace BlazorApp3.NewModels.DTOs
 {
 
     
