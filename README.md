@@ -57,6 +57,9 @@ Since the object is stored using browser storage, you need to work with the obje
 ## Logging ##
 I added Serilog package to write the log to the database. There is a page to display the last 50 entries and a page to show the details of one log record.
 
+## Data Annotation
+The EditForms allow validations on fields but I did not want to add data annotation to the database model classes. So I created DTO classes for each data model class and used that in the EditForms. Then I used AutoMapping to copy the DTO model class to the data model class and back (for edit methods).
+
 ## Misc ##
 There is still a bug in creating a new user. It ignores the role selection from the dropdown selection control.
 
