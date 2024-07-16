@@ -61,9 +61,7 @@ I added Serilog package to write the log to the database. There is a page to dis
 The EditForms allow validations on fields but I did not want to add data annotation to the database model classes. So I created DTO classes for each data model class and used that in the EditForms. Then I used AutoMapping to copy the DTO model class to the data model class and back (for edit methods).
 
 ## Misc ##
-There is still a bug in creating a new user. It ignores the role selection from the dropdown selection control.
-
-I learned that when you get a bug (not caught by try/catch), the error stack is displayed in the output window.
+I learned that when you get a bug (not caught by try/catch), the error stack is displayed in the output window. It is now visible with the logger page.
 
 There is a memory leak in VS. So every so often it is worth exiting and restarting VS when things start looking wierd.
 
