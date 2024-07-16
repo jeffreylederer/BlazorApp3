@@ -1,8 +1,82 @@
 ﻿@page "/matches/clearschedule"
 
+@using BlazorApp3.Components.Layout
+@inherits LayoutComponentBase
+@layout LeagueLayout
+
+@using BlazorApp3.Code
+@using BlazorApp3.Model
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+
+@inject ProtectedSessionStorage ProtectedSessionStore
+@inject BlazorApp3.Model.TournamentContext DB
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
 <PageTitle>Clear Schedule</PageTitle>
+
 <h3>Clear Schedule</h3>
+<CascadingAuthenticationState>
+    <AuthorizeView Roles="SiteAdmin,Admin">
+        <NotAuthorized>
+            <p>Not authorized to view this page</p>
+        </NotAuthorized>
+        <Authorized>
+            @if(league==null)
+            {
+                <p>Loading...</p>
+            }
+            else
+            {
+                <p style="color:red; font-size:large;">Are you sure you want to erase all matches?</p>
+                <div>
+                    
+                    This will erase all matches for the @league.LeagueName 
+                    <br /><br />
+                    @if (ErrorMessage == "")
+                    {
+                        <button @onclick="Submit">Erase Matches</button>
+                    }
+
+                </div>
+                <h1 class="validation-summary-errors text-danger">@ErrorMessage</h1>
+                  
+            }
+            <a href="/matches">Back to List</a>
+       </Authorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>
 
 @code {
 
+    protected string ErrorMessage = "";
+    int? leagueid;
+    League? league;
+
+    protected override async Task OnAfterRenderAsync(bool firstTime)
+    {
+        if (firstTime)
+        {
+            ProtectedBrowserStorageResult<int> result = await ProtectedSessionStore.GetAsync<int>("leagueid");
+            if (result.Success)
+            {
+                leagueid = result.Value;
+                league = DB.Leagues.Find(leagueid.Value);
+                if (league != null)
+                {
+                    ErrorMessage=UpdateMatches.Check(league);
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
+    protected void Submit()
+    {
+        ErrorMessage = UpdateMatches.Delete(league);
+        if (ErrorMessage != "")
+            return;
+        NavigationManager.NavigateTo("/matches");
+    }
 }

@@ -1,8 +1,137 @@
 ﻿@page "/matches/creatematches"
 
+
+@using BlazorApp3.Components.Layout
+@inherits LayoutComponentBase
+@layout LeagueLayout
+
+@using BlazorApp3.Code
+@using BlazorApp3.Model
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+
+@inject ProtectedSessionStorage ProtectedSessionStore
+@inject BlazorApp3.Model.TournamentContext DB
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
 <PageTitle>Create Matches</PageTitle>
 <h3>Create Matches</h3>
 
-@code {
+<CascadingAuthenticationState>
+    <AuthorizeView Roles="SiteAdmin,Admin">
+        <NotAuthorized>
+            <p>Not authorized to view this page</p>
+        </NotAuthorized>
+        <Authorized>
+            @if(league==null)
+            {
+                <p>Loading...</p>
+            }
+            else
+            {
+                <p style="color:red; font-size:large;">Are you sure you want to erase all matches and create a new set of matches?</p>
+                <div>
+                    @if(missing != null && missing.Count() >0)
+                    {
+                        <h3>Missing </h3>
+                        <QuickGrid  Items="@missing">
+                             <PropertyColumn Property="user => user.FullName" Title="Players not assigned to a team" />
+                         </QuickGrid>
+                    }
+                    This will erase all matches for the @league.LeagueName and create a new round robin set of matches using the
+                    league's schedule and teams.
+                    <br /><br />
+                    @if (ErrorMessage == "")
+                    {
+                        <button @onclick="Submit">Create Matches</button>
+                    }
 
+                </div>
+                <h1 class="validation-summary-errors text-danger">@ErrorMessage</h1>
+                  
+            }
+            <a href="/matches">Back to List</a>
+       </Authorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>
+
+@code {
+    protected string ErrorMessage = "";
+    int? leagueid;
+    League? league;
+    IQueryable<UpdateMatches>? missing;
+
+    protected override async Task OnAfterRenderAsync(bool firstTime)
+    {
+        if (firstTime)
+        {
+            ProtectedBrowserStorageResult<int> result = await ProtectedSessionStore.GetAsync<int>("leagueid");
+            if (result.Success)
+            {
+                leagueid = result.Value;
+                league = DB.Leagues.Find(leagueid.Value);
+                if (league != null)
+                {
+                    missing = UpdateMatches.Missing(leagueid.Value);
+                    if (missing.Count() > 0)
+                    {
+                        ErrorMessage = "Some players not assigned to a team";
+
+                    }
+                    else
+                    {
+                          ErrorMessage = UpdateMatches.Check(league);
+                    }
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
+    protected void Submit()
+    {
+
+        ErrorMessage = UpdateMatches.Create(league);
+        if(ErrorMessage == "")        
+            NavigationManager.NavigateTo("/matches");
+    }
+
+    private IQueryable<MissingPlayer> Missing(int leagueid)
+    {
+        var playerList = DB.Players.Where(x => x.Leagueid == leagueid).ToList();
+        foreach(var team in DB.Teams.Where(x => x.Leagueid == leagueid))
+        {
+            if (team.Skip.HasValue && playerList.Find(x => x.Id == team.Skip.Value)!=null)
+            {
+                playerList.Remove(playerList.Find(x => x.Id == team.Skip.Value));
+            }
+            if (team.Lead.HasValue && playerList.Find(x => x.Id == team.Lead.Value) != null)
+            {
+                playerList.Remove(playerList.Find(x => x.Id == team.Lead.Value));
+            }
+            if (team.ViceSkip.HasValue && playerList.Find(x => x.Id == team.ViceSkip.Value) != null)
+            {
+                playerList.Remove(playerList.Find(x => x.Id == team.ViceSkip.Value));
+            }
+
+        }
+        List<MissingPlayer> missing = new List<MissingPlayer>();
+        foreach(var player in playerList)
+        {
+            missing.Add(new MissingPlayer()
+                {
+                    FullName = DB.Memberships.Find(player.MembershipId).FullName
+                });
+        }
+        return missing.AsQueryable();
+    }
+
+    public class MissingPlayer
+    {
+        public string? FullName { get; set; }
+    }
+
+    
 }

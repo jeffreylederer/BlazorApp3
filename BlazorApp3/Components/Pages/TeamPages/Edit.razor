@@ -9,6 +9,7 @@
 @inject NavigationManager NavigationManager
 @using Microsoft.EntityFrameworkCore
 @using System.Text
+@rendermode InteractiveServer
 
 <PageTitle>Edit</PageTitle>
 
@@ -115,19 +116,22 @@ else
     public List<PlayerViewModel> dropdownList { get; set; }
     public string message = "";
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstTime)
     {
-
-        Team ??= await DB.Teams.FirstOrDefaultAsync(m => m.Id == Id);
-          
-        if (Team is null)
+        if (firstTime)
         {
-            NavigationManager.NavigateTo("notfound");
+            Team ??= await DB.Teams.FirstOrDefaultAsync(m => m.Id == Id);
+          
+            if (Team is null)
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            leagueid = Team.Leagueid;
+            league = await DB.Leagues.FindAsync(leagueid);
+            var teams = DB.Teams.Where(x => x.Leagueid == Team.Leagueid).OrderBy(x => x.TeamNo).ToList();
+            dropdownList =BlazorApp3.Code.RemainingPlayers.Find(Team, teams);
+            StateHasChanged();
         }
-        leagueid = Team.Leagueid;
-        league = await DB.Leagues.FindAsync(leagueid);
-        var teams = DB.Teams.Where(x => x.Leagueid == Team.Leagueid).OrderBy(x => x.TeamNo).ToList();
-        dropdownList =BlazorApp3.Code.RemainingPlayers.Find(Team, teams);
 
     }
 
