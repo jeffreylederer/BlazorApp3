@@ -61,9 +61,10 @@ The EditForms allow validations on fields but I did not want to add data annotat
 
 ## AntiForgery ##
 There is an antiforgery service that can prevent cross-site request forgery. Once you use this service, Blazer creates a unique aniforgery token for each EditForm. It is visible when you look at source view of the page inside the form, your will see:
-        <form data-enhance="" method="post" action="/schedules/edit?id=3053">
-        <input type="hidden" name="_handler" value="edit" />
-        <input type="hidden" name="AntiforgeryFieldname" value="CfDJ8KPOziIRSVx..." />
+
+    <form data-enhance="" method="post" action="/schedules/edit?id=3053">
+    <input type="hidden" name="_handler" value="edit" />
+    <input type="hidden" name="AntiforgeryFieldname" value="CfDJ8KPOziIRSVx..." />
 
 
 ## Misc ##
