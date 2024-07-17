@@ -60,7 +60,7 @@ I added Serilog package to write the log to the database. There is a page to dis
 The EditForms allow validations on fields but I did not want to add data annotation to the database model classes. So I created DTO classes for each data model class and used that in the EditForms. Then I used AutoMapping to copy the DTO model class to the data model class and back (for edit methods).
 
 ## AntiForgery ##
-There is an antiforgery service that can prevent cross-site request forgery. Once you use this service, Blazer creates a unique aniforgery token for each EditForm. It is visible when you look at source view of the page inside the form, your will see:
+There is an antiforgery service that can prevent cross-site request forgery. Once you use this service, Blazer creates a unique aniforgery token for each EditForm. It is visible when you look at source view of the page, your will see:
 
     <form data-enhance="" method="post" action="/schedules/edit?id=3053">
     <input type="hidden" name="_handler" value="edit" />
