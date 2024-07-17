@@ -14,7 +14,6 @@
   <ItemGroup>
     <PackageReference Include="Ardalis.GuardClauses" Version="4.5.0" />
     <PackageReference Include="AutoMapper" Version="13.0.1" />
-    <PackageReference Include="Blazored.SessionStorage" Version="2.4.0" />
     <PackageReference Include="DNTCommon.Web.Core" Version="5.3.3" />
     <PackageReference Include="EntityFramework" Version="6.4.4" />
     <PackageReference Include="jQuery" Version="3.7.1" />

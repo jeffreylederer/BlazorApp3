@@ -7,9 +7,9 @@
 @using Microsoft.AspNetCore.Components.QuickGrid
 @inject BlazorApp3.Model.TournamentContext DB
 @using BlazorApp3.Model
-@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
-@inject ProtectedSessionStorage ProtectedSessionStore
-@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+
 <PageTitle>Index</PageTitle>
 
 <h1>Index</h1>
@@ -17,8 +17,7 @@
 
 @{
     string format = "dddd";
-    if (leagueid.HasValue && league != null)
-    {
+  }  
         <p>
             <a href="schedules/create?leagueid=@leagueid">Create New</a>
         </p>
@@ -35,31 +34,18 @@
                 <a href="@($"schedules/delete?id={schedule.Id}")">Delete</a>
             </TemplateColumn>
         </QuickGrid>
-    }
-    else
-    {
-        <p>Loading...</p>
-    }
-}
+
+    
+
 
 @code {
     private int? leagueid;
     private League? league;
 
-    protected override async Task OnAfterRenderAsync(bool firstTime)
+    protected override void OnInitialized()
     {
-        if (firstTime)
-        {
-            ProtectedBrowserStorageResult<int> result = await ProtectedSessionStore.GetAsync<int>("leagueid");
-            if (result.Success)
-            {
-                leagueid = result.Value;
-                league =  DB.Leagues.Find(leagueid.Value);
-                if (league != null)
-                {
-                    StateHasChanged();
-                }
-            }
-        }
+        var token = HttpContextAccessor.HttpContext.Request.Cookies["leagueid"];
+        leagueid = int.Parse(token);
+        league =  DB.Leagues.Find(leagueid.Value);
     }
 }

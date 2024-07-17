@@ -14,22 +14,13 @@
 @using Microsoft.AspNetCore.Http
 @inject IHttpContextAccessor httpContextAccessor
 @inject AuthenticationStateProvider GetAuthenticationStateAsync
-@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using System.Security.Claims
-@inject ProtectedSessionStorage ProtectedSessionStore
-@rendermode InteractiveServer
 @inject ILogger<Welcome> logger;
+@inject IHttpContextAccessor HttpContextAccessor;
 
 
     
-@{
-    if (league == null)
-    {
 
-       <p>Loading ...</p>
-    }
-    else
-    {
         <h2>Welcome to @league.LeagueName</h2>
 
   
@@ -55,7 +46,7 @@
             <dd>They can be league administrator for any league and create leagues and users. </dd>
         </dl>
     }
-}
+
 
 
 @code {
@@ -67,30 +58,27 @@
     public string Role;
 
 
-    protected override async Task OnAfterRenderAsync(bool firstTime)
+   
+
+    protected override async Task OnInitializedAsync()
     {
-        if (firstTime)
+        league = DB.Leagues.Find(leagueid);
+        CookieOptions options = new CookieOptions();
+        options.Expires = DateTime.Now.AddDays(1);
+        httpContextAccessor.HttpContext.Response.Cookies.Append("leagueid", leagueid.ToString(), options);
+        var authstate = await GetAuthenticationStateAsync.GetAuthenticationStateAsync();
+        var user = authstate.User;
+        if (user != null)
         {
-            await ProtectedSessionStore.SetAsync("leagueid", leagueid);
-            league = DB.Leagues.Find(leagueid);
-            var authstate = await GetAuthenticationStateAsync.GetAuthenticationStateAsync();
-            var user = authstate.User;
-            if (user != null)
+            foreach (var claim in user.Claims)
             {
-                foreach (var claim in user.Claims)
+                if (claim.Type == ClaimTypes.Role)
                 {
-                    if (claim.Type == ClaimTypes.Role)
-                    {
-                        Role = claim.Value;
-                        break;
-                    }
+                    Role = claim.Value;
+                    break;
                 }
             }
-            StateHasChanged();
-
-            logger.LogDebug("Started with league {1}", league.LeagueName);
         }
     }
 
- 
 }

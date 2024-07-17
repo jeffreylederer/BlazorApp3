@@ -7,10 +7,8 @@
 @inject BlazorApp3.Model.TournamentContext DB
 @using BlazorApp3.Model
 @using Microsoft.EntityFrameworkCore
-@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
-@inject ProtectedSessionStorage ProtectedSessionStore
-@rendermode InteractiveServer
-
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager NavigationManager
 
 <PageTitle>Index</PageTitle>
 
@@ -63,26 +61,24 @@
     bool viceskip=false;
 
 
-
-    protected override async Task OnAfterRenderAsync(bool firstTime)
+    protected override void OnInitialized()
     {
-        if (firstTime)
+        var token = HttpContextAccessor.HttpContext.Request.Cookies["leagueid"];
+        leagueid = int.Parse(token);
+        league = DB.Leagues.Find(leagueid.Value);
+        if(league != null)
         {
-            ProtectedBrowserStorageResult<int> result = await ProtectedSessionStore.GetAsync<int>("leagueid");
-            if(result.Success)
-            {
-                leagueid = result.Value;
-                league = DB.Leagues.Find(leagueid.Value);
-                if (league != null)
-                {
-                    if (league?.TeamSize == 3)
-                        viceskip = true;
-                    if (league?.TeamSize > 1)
-                        lead = true;
-                    StateHasChanged();
-                }
-            }
+            if (league?.TeamSize == 3)
+                viceskip = true;
+            if (league?.TeamSize > 1)
+                lead = true;
+
+        }
+        else
+        {
+            NavigationManager.NavigateTo("notfound");
         }
     }
+   
     
 }

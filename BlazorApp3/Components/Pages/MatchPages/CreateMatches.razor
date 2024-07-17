@@ -9,11 +9,9 @@
 @using BlazorApp3.Model
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.QuickGrid
-@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
-
-@inject ProtectedSessionStorage ProtectedSessionStore
 @inject BlazorApp3.Model.TournamentContext DB
 @inject NavigationManager NavigationManager
+@inject IHttpContextAccessor HttpContextAccessor
 @rendermode InteractiveServer
 
 <PageTitle>Create Matches</PageTitle>
@@ -67,27 +65,30 @@
     {
         if (firstTime)
         {
-            ProtectedBrowserStorageResult<int> result = await ProtectedSessionStore.GetAsync<int>("leagueid");
-            if (result.Success)
-            {
-                leagueid = result.Value;
-                league = DB.Leagues.Find(leagueid.Value);
-                if (league != null)
-                {
-                    missing = UpdateMatches.Missing(leagueid.Value);
-                    if (missing.Count() > 0)
-                    {
-                        ErrorMessage = "Some players not assigned to a team";
+            var token = HttpContextAccessor.HttpContext.Request.Cookies["leagueid"];
+            leagueid = int.Parse(token);
+            league = await DB.Leagues.FindAsync(leagueid.Value);
 
-                    }
-                    else
-                    {
-                          ErrorMessage = UpdateMatches.Check(league);
-                    }
-                    StateHasChanged();
+            if (league != null)
+            {
+                missing = UpdateMatches.Missing(leagueid.Value);
+                if (missing.Count() > 0)
+                {
+                    ErrorMessage = "Some players not assigned to a team";
+
                 }
+                else
+                {
+                    ErrorMessage = UpdateMatches.Check(league);
+                }
+                StateHasChanged();
+            }
+            else
+            {
+                NavigationManager.NavigateTo("notfound");
             }
         }
+
     }
 
     protected void Submit()

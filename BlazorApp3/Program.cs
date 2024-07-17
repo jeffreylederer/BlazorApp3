@@ -4,7 +4,6 @@ using BlazerApp3.Infralayer;
 using BlazerApp3.Services;
 using BlazorApp3.Components;
 using BlazorApp3.Model;
-using Blazored.SessionStorage;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -70,7 +69,6 @@ builder.Services
 
 
 builder.Services.AddSingleton(mapper);
-builder.Services.AddBlazoredSessionStorage();
 
 builder.Services.AddAntiforgery(options =>
 {

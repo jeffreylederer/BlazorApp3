@@ -7,11 +7,10 @@
 @using BlazorApp3.Code
 @using BlazorApp3.Model
 @using Microsoft.AspNetCore.Components.Authorization
-@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 
-@inject ProtectedSessionStorage ProtectedSessionStore
 @inject BlazorApp3.Model.TournamentContext DB
 @inject NavigationManager NavigationManager
+@inject IHttpContextAccessor HttpContextAccessor
 @rendermode InteractiveServer
 
 <PageTitle>Clear Schedule</PageTitle>
@@ -23,25 +22,27 @@
             <p>Not authorized to view this page</p>
         </NotAuthorized>
         <Authorized>
-            @if(league==null)
-            {
-                <p>Loading...</p>
-            }
-            else
-            {
-                <p style="color:red; font-size:large;">Are you sure you want to erase all matches?</p>
-                <div>
+             @{
+                @if(league == null)
+                {
+                    <p>Loading...</p>
+                }
+                else
+                {
+                        <p style="color:red; font-size:large;">Are you sure you want to erase all matches?</p>
+                        <div>
                     
-                    This will erase all matches for the @league.LeagueName 
-                    <br /><br />
-                    @if (ErrorMessage == "")
-                    {
-                        <button @onclick="Submit">Erase Matches</button>
-                    }
+                            This will erase all matches for the @league.LeagueName 
+                            <br /><br />
+                            @if (ErrorMessage == "")
+                            {
+                                <button @onclick="Submit">Erase Matches</button>
+                            }
 
-                </div>
-                <h1 class="validation-summary-errors text-danger">@ErrorMessage</h1>
+                        </div>
+                        <h1 class="validation-summary-errors text-danger">@ErrorMessage</h1>
                   
+                }
             }
             <a href="/matches">Back to List</a>
        </Authorized>
@@ -54,21 +55,19 @@
     int? leagueid;
     League? league;
 
-    protected override async Task OnAfterRenderAsync(bool firstTime)
+    protected override void OnAfterRender(bool firstTime)
     {
         if (firstTime)
         {
-            ProtectedBrowserStorageResult<int> result = await ProtectedSessionStore.GetAsync<int>("leagueid");
-            if (result.Success)
+            var token = HttpContextAccessor.HttpContext.Request.Cookies["leagueid"];
+            leagueid = int.Parse(token);
+            league =  DB.Leagues.Find(leagueid.Value);
+
+            if (league == null)
             {
-                leagueid = result.Value;
-                league = DB.Leagues.Find(leagueid.Value);
-                if (league != null)
-                {
-                    ErrorMessage=UpdateMatches.Check(league);
-                    StateHasChanged();
-                }
+                NavigationManager.NavigateTo("notfound");
             }
+            StateHasChanged();
         }
     }
 
