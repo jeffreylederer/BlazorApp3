@@ -51,8 +51,7 @@ I want to limit users to certain pages and certain functions on the pages a user
 I used QuestPDF to create a single PDF document. It is accessable from the Teams index page. I did not bother to create additional ones that are avialable to the older app.
 
 ## Session Object ##
-.Net Core does not support the Session Object. This application had to store from page to page the current league id.  I used ProtectedSessionStore. On the Welcome page, I created a ProtectedSessionStore object and then in each table index page I retrieved that object.
-Since the object is stored using browser storage, you need to work with the object in a override of the OnAfterRenderAsync method and set the rendermode to InteractiveServer.
+.Net Core does not support the Session Object. This application had to store from page to page the current league id. I injected IHttpContextAccessor HttpContextAccessor and used Response Cookies to store the league id.
 
 ## Logging ##
 I added Serilog package to write the log to the database. There is a page to display the last 50 entries and a page to show the details of one log record.
