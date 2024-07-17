@@ -1,0 +1,3 @@
+﻿CREATE LOGIN [AdminUser]
+    WITH PASSWORD = N'cxumeqP4!vPpn2yghsabvfoimsFT7_&#$!~<e1gBlvbx{Tox', SID = 0x4E27390476A89641AAE7CAC8A215E32A, DEFAULT_DATABASE = [Tournament], DEFAULT_LANGUAGE = [us_english], CHECK_POLICY = OFF;
+
