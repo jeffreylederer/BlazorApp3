@@ -16,91 +16,85 @@
 
 <h4>Team</h4>
 <hr />
-@{
-    if(league != null)
-    {
-        <div class="row">
-            <div class="col-md-4">
-                <EditForm method="post" Model="Team" OnValidSubmit="AddTeam" FormName="create" Enhance>
-                    <DataAnnotationsValidator />
-                    <ValidationSummary />
-                    <input type="hidden" id="leagueid" @bind-value="@Team.Leagueid" />
-                    <input type="hidden" id="teamno" @bind-value="@Team.TeamNo" />
-                    <div class="mb-3">
-                        <label for="skip" class="form-label">Skip:</label>
-                        <InputSelect id="skip" @bind-Value="Team.Skip">
-                            <option value="0"></option>
-                            @foreach (var item in dropdownList)
-                            {
-                                <option value="@item.id">@item.FullName</option>
-                            }
-                        </InputSelect>
-                        <ValidationMessage For="() => Team.Skip" class="text-danger" />
-                    </div>
-                    @if (@league.TeamSize == 3)
-                    {
-                        <div class="mb-3">
-                            <label for="viceskip" class="form-label">ViceSkip:</label>
-                            <InputSelect id="viceskip" @bind-Value="Team.ViceSkip">
-                                <option value="0"></option>
-                                @foreach (var item in dropdownList)
-                                {
-                                    <option value="@item.id">@item.FullName</option>
-                                }
-                            </InputSelect>
-                            <ValidationMessage For="() => Team.ViceSkip" class="text-danger" />
-                        </div>
-                    }
-                    else
-                    {
-                        <input type="hidden" id="viceskip" @bind-value="@Team.ViceSkip" />
-                    }
-                    @if (@league.TeamSize > 1)
-                    {
-                        <div class="mb-3">
-                            <label for="lead" class="form-label">Lead:</label>
-                            <InputSelect id="lead" @bind-Value="Team.Lead">
-                                <option value="0"></option>
-                                @foreach (var item in dropdownList)
-                                {
-                                    <option value="@item.id">@item.FullName</option>
-                                }
-                            </InputSelect>
-                            <ValidationMessage For="() => Team.Lead" class="text-danger" />
-                        </div>
-                    }
-                    else
-                    {
-                        <input type="hidden" id="lead" @bind-value="@Team.Lead" />
-                    }
 
-
-                    @if (@league.Divisions == 2)
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Team" OnValidSubmit="AddTeam" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <input type="hidden" id="leagueid" @bind-value="@Team.Leagueid" />
+            <input type="hidden" id="teamno" @bind-value="@Team.TeamNo" />
+            <div class="mb-3">
+                <label for="skip" class="form-label">Skip:</label>
+                <InputSelect id="skip" @bind-Value="Team.Skip">
+                    <option value="0"></option>
+                    @foreach (var item in dropdownList)
                     {
-                        <div class="mb-3">
-                            <label for="divisionid" class="form-label">DivisionId:</label>
-                            <select id="divisionid" @bind="Team.DivisionId">
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                            </select>
-
-                            <ValidationMessage For="() => Team.DivisionId" class="text-danger" />
-                        </div>
+                        <option value="@item.id">@item.FullName</option>
                     }
-                    else
-                    {
-                        <input type="hidden" id="divisionid" @bind-value="@Team.DivisionId" />
-                    }
-                    <button type="submit" class="btn btn-primary">Create</button>
-                </EditForm>
+                </InputSelect>
+                <ValidationMessage For="() => Team.Skip" class="text-danger" />
             </div>
-        </div>
-    }
-    else
-    {
-        <p>Loading...</p>
-    }
-}
+            @if (@league.TeamSize == 3)
+            {
+                <div class="mb-3">
+                    <label for="viceskip" class="form-label">ViceSkip:</label>
+                    <InputSelect id="viceskip" @bind-Value="Team.ViceSkip">
+                        <option value="0"></option>
+                        @foreach (var item in dropdownList)
+                        {
+                            <option value="@item.id">@item.FullName</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="() => Team.ViceSkip" class="text-danger" />
+                </div>
+            }
+            else
+            {
+                <input type="hidden" id="viceskip" @bind-value="@Team.ViceSkip" />
+            }
+            @if (@league.TeamSize > 1)
+            {
+                <div class="mb-3">
+                    <label for="lead" class="form-label">Lead:</label>
+                    <InputSelect id="lead" @bind-Value="Team.Lead">
+                        <option value="0"></option>
+                        @foreach (var item in dropdownList)
+                        {
+                            <option value="@item.id">@item.FullName</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="() => Team.Lead" class="text-danger" />
+                </div>
+            }
+            else
+            {
+                <input type="hidden" id="lead" @bind-value="@Team.Lead" />
+            }
+
+
+            @if (@league.Divisions == 2)
+            {
+                <div class="mb-3">
+                    <label for="divisionid" class="form-label">DivisionId:</label>
+                    <select id="divisionid" @bind="Team.DivisionId">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                    </select>
+
+                    <ValidationMessage For="() => Team.DivisionId" class="text-danger" />
+                </div>
+            }
+            else
+            {
+                <input type="hidden" id="divisionid" @bind-value="@Team.DivisionId" />
+            }
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+   
+
 
 <div>
     <a href="/teams">Back to List</a>
@@ -139,36 +133,30 @@
         NavigationManager.NavigateTo("/teams");
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override void OnInitialized()
     {
-        if (firstRender)
+        int teamNo = 1;
+        league = DB.Leagues.Find(leagueid);
+        var list = DB.Teams.Where(x => x.Leagueid == leagueid).OrderBy(x => x.TeamNo).ToList();
+
+        if (list.Any())
         {
-
-            int teamNo = 1;
-            league = DB.Leagues.Find(leagueid);
-            var list = DB.Teams.Where(x => x.Leagueid == leagueid).ToList().OrderBy(x => x.TeamNo).ToList();
-
-            if (list.Any())
-            {
-                teamNo = list.Last().TeamNo + 1;
-            }
-
-
-            Team = new Team()
-            {
-                Id = 0,
-                DivisionId = 1,
-                TeamNo = teamNo,
-                Leagueid = leagueid,
-                Skip = 0,
-                ViceSkip = 0,
-                Lead = 0
-            };
-
-            var teams = DB.Teams.Where(x => x.Leagueid == Team.Leagueid).OrderBy(x => x.TeamNo).ToList();
-            dropdownList =BlazorApp3.Code.RemainingPlayers.Find(Team, teams);
-            StateHasChanged();
+            teamNo = list.Last().TeamNo + 1;
         }
+
+
+        Team = new Team()
+        {
+            Id = 0,
+            DivisionId = 1,
+            TeamNo = teamNo,
+            Leagueid = leagueid,
+            Skip = 0,
+            ViceSkip = 0,
+            Lead = 0
+        };
+        var teams = DB.Teams.Where(x => x.Leagueid == Team.Leagueid).OrderBy(x => x.TeamNo).ToList();
+        dropdownList =BlazorApp3.Code.RemainingPlayers.Find(Team, teams);     
     }
 
     private void OrderTeam(int leagueid)

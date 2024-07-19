@@ -62,7 +62,6 @@
     <Folder Include="dbo\Tables\" />
     <Folder Include="dbo\Views\" />
     <Folder Include="Security\" />
-    <Folder Include="dbo\Stored Procedures\" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="dbo\Tables\Schedule.sql" />
@@ -79,20 +78,9 @@
     <Build Include="dbo\Tables\Team.sql" />
     <Build Include="dbo\Tables\RinkOrder.sql" />
     <Build Include="dbo\Views\MatchView.sql" />
-    <Build Include="dbo\Views\UserLeagueView.sql" />
     <Build Include="dbo\Views\TeamsView.sql" />
     <Build Include="Security\AdminUser.sql" />
     <Build Include="Security\AdminUser_1.sql" />
     <Build Include="Security\RoleMemberships.sql" />
-    <Build Include="dbo\Stored Procedures\LeagueAllowDelete.sql" />
-    <Build Include="dbo\Stored Procedures\MembershipAllowDelete.sql" />
-    <Build Include="dbo\Stored Procedures\PlayerAllowDelete.sql" />
-    <Build Include="dbo\Stored Procedures\TeamAllowDelete.sql" />
-    <Build Include="dbo\Stored Procedures\ScheduleAllowDelete.sql" />
-    <Build Include="dbo\Stored Procedures\ELMAH_GetErrorsXml.sql" />
-    <Build Include="dbo\Stored Procedures\ELMAH_GetErrorXml.sql" />
-    <Build Include="dbo\Stored Procedures\ELMAH_LogError.sql" />
-    <Build Include="dbo\Stored Procedures\GetMatchAll.sql" />
-    <Build Include="dbo\Stored Procedures\Team_Delete.sql" />
   </ItemGroup>
 </Project>

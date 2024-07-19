@@ -55,9 +55,9 @@
     int? leagueid;
     League? league;
 
-    protected override void OnAfterRender(bool firstTime)
+    protected override void OnInitialized()
     {
-        if (firstTime)
+        if (league == null)
         {
             var token = HttpContextAccessor.HttpContext.Request.Cookies["leagueid"];
             leagueid = int.Parse(token);
@@ -67,7 +67,6 @@
             {
                 NavigationManager.NavigateTo("notfound");
             }
-            StateHasChanged();
         }
     }
 
@@ -75,7 +74,12 @@
     {
         ErrorMessage = UpdateMatches.Delete(league);
         if (ErrorMessage != "")
+        {
+            var token = HttpContextAccessor.HttpContext.Request.Cookies["leagueid"];
+            leagueid = int.Parse(token);
+            league = DB.Leagues.Find(leagueid.Value);
             return;
+        }
         NavigationManager.NavigateTo("/matches");
     }
 }

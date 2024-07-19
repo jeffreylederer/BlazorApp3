@@ -61,13 +61,13 @@
     League? league;
     IQueryable<UpdateMatches>? missing;
 
-    protected override async Task OnAfterRenderAsync(bool firstTime)
+    protected override void OnInitialized()
     {
-        if (firstTime)
+        if (league == null)
         {
             var token = HttpContextAccessor.HttpContext.Request.Cookies["leagueid"];
             leagueid = int.Parse(token);
-            league = await DB.Leagues.FindAsync(leagueid.Value);
+            league = DB.Leagues.Find(leagueid.Value);
 
             if (league != null)
             {
@@ -95,8 +95,14 @@
     {
 
         ErrorMessage = UpdateMatches.Create(league);
-        if(ErrorMessage == "")        
-            NavigationManager.NavigateTo("/matches");
+        if(ErrorMessage != "")
+        {
+            var token = HttpContextAccessor.HttpContext.Request.Cookies["leagueid"];
+            leagueid = int.Parse(token);
+            league = DB.Leagues.Find(leagueid.Value);
+            return;
+        }
+        NavigationManager.NavigateTo("/matches");
     }
 
     private IQueryable<MissingPlayer> Missing(int leagueid)

@@ -12,12 +12,7 @@
 
 <h1>Create</h1>
 
-@if (members1 == null)
-{
-    <p>Loading...</p>
-}
-else
-{
+
     <h4>Player</h4>
     <hr />
     <div class="row">
@@ -42,7 +37,7 @@ else
     <div>
         <a href="/players">Back to List</a>
     </div>
-}
+
 
 @code {
 
@@ -67,23 +62,18 @@ else
         NavigationManager.NavigateTo("/players");
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstTime)
+    protected override void OnInitialized()
     {
-        if (firstTime)
-
+        var player = DB.Players.Where(x => x.Leagueid == leagueid).ToList();
+        var members = DB.Memberships.ToList();
+        members1 = new List<Membership>();
+        foreach (var item in members)
         {
-            var player = DB.Players.Where(x => x.Leagueid == leagueid).ToList();
-            var members = DB.Memberships.ToList();
-            members1 = new List<Membership>();
-            foreach (var item in members)
+            if (!player.Exists(x => x.MembershipId == item.Id))
             {
-                if (!player.Exists(x => x.MembershipId == item.Id))
-                {
-                    members1.Add(item);
-                }
+                members1.Add(item);
             }
-            StateHasChanged();
-        }
+        }    
     }
 
     public class NewPlayer
